@@ -415,40 +415,41 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
             <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"></div>
           </div>
 
-          {activeChats.length > 0 ? (
+          {activeChats.filter(chat => getMemberFromChat(chat)).length > 0 ? (
             <div className="bg-white/55 backdrop-blur-md dark:bg-slate-800/55 rounded-[2rem] overflow-hidden border border-white/40 dark:border-slate-700 shadow-sm divide-y divide-slate-100/60 dark:divide-slate-700/60">
-              {activeChats.map(chat => {
-                const otherMember = getMemberFromChat(chat);
-                if (!otherMember) return null;
-                return (
-                  <div key={chat.id} className="flex items-center hover:bg-white/40 transition-all">
-                    <button
-                      onClick={() => navigate(`/chat/${otherMember.uid}`)}
-                      className="flex-1 flex items-center gap-3 px-5 py-4 text-left active:scale-[0.98] transition-all"
-                    >
-                      <div className={`size-11 rounded-2xl ${otherMember.avatarColor} flex items-center justify-center shrink-0 overflow-hidden`}>
-                        {otherMember.avatarUrl ? (
-                          <img src={otherMember.avatarUrl} alt={otherMember.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className={`text-sm font-black ${otherMember.avatarTextColor}`}>{otherMember.initial}</span>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-black text-slate-800 dark:text-white">{otherMember.name}</p>
-                        <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">{chat.lastMessage}</p>
-                      </div>
-                      <span className="text-[9px] text-slate-400 font-bold shrink-0">{formatTime(chat.lastMessageTime)}</span>
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteChat(chat.id, otherMember.name, e)}
-                      className="px-3 py-4 text-slate-300 hover:text-red-400 transition-colors shrink-0"
-                      title="채팅방 삭제"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">delete_outline</span>
-                    </button>
-                  </div>
-                );
-              })}
+              {activeChats
+                .filter(chat => getMemberFromChat(chat))
+                .map(chat => {
+                  const otherMember = getMemberFromChat(chat)!;
+                  return (
+                    <div key={chat.id} className="flex items-center hover:bg-white/40 transition-all">
+                      <button
+                        onClick={() => navigate(`/chat/${otherMember.uid}`)}
+                        className="flex-1 flex items-center gap-3 px-5 py-4 text-left active:scale-[0.98] transition-all"
+                      >
+                        <div className={`size-11 rounded-2xl ${otherMember.avatarColor} flex items-center justify-center shrink-0 overflow-hidden`}>
+                          {otherMember.avatarUrl ? (
+                            <img src={otherMember.avatarUrl} alt={otherMember.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className={`text-sm font-black ${otherMember.avatarTextColor}`}>{otherMember.initial}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-black text-slate-800 dark:text-white">{otherMember.name}</p>
+                          <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">{chat.lastMessage}</p>
+                        </div>
+                        <span className="text-[9px] text-slate-400 font-bold shrink-0">{formatTime(chat.lastMessageTime)}</span>
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteChat(chat.id, otherMember.name, e)}
+                        className="px-3 py-4 text-slate-300 hover:text-red-400 transition-colors shrink-0"
+                        title="채팅방 삭제"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete_outline</span>
+                      </button>
+                    </div>
+                  );
+                })}
             </div>
           ) : (
             <div className="bg-white/55 backdrop-blur-md dark:bg-slate-800/55 rounded-[2rem] p-8 border border-white/40 dark:border-slate-700 shadow-sm text-center">
