@@ -479,7 +479,7 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
                 <button
                   key={member.uid}
                   onClick={() => member.uid !== currentUser.uid && navigate(`/chat/${member.uid}`)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-2xl transition-all ${member.uid === currentUser.uid ? 'cursor-default opacity-80' : 'hover:bg-white/60 active:scale-[0.98]'}`}
+                  className={`w-full flex items-center gap-3 p-2 rounded-2xl transition-all group ${member.uid === currentUser.uid ? 'cursor-default opacity-80' : 'hover:bg-white/60 active:scale-[0.98]'}`}
                 >
                   <div className={`size-10 rounded-2xl ${member.avatarColor} flex items-center justify-center shrink-0 overflow-hidden`}>
                     {member.avatarUrl ? (
@@ -496,7 +496,11 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] font-black px-2 py-1 rounded-lg bg-indigo-50 text-indigo-500 uppercase tracking-wider">관리자</span>
-                    {member.uid !== currentUser.uid && <span className="material-symbols-outlined text-slate-300 text-[16px]">chat_bubble_outline</span>}
+                    {member.uid !== currentUser.uid && (
+                      <span className="material-symbols-outlined text-slate-300 text-[16px] group-hover:text-primary transition-colors">
+                        chat_bubble_outline
+                      </span>
+                    )}
                   </div>
                 </button>
               ))}
@@ -514,7 +518,7 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
                 <button
                   key={member.uid}
                   onClick={() => member.uid !== currentUser.uid && navigate(`/chat/${member.uid}`)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-2xl transition-all ${member.uid === currentUser.uid ? 'cursor-default opacity-80' : 'hover:bg-white/60 active:scale-[0.98]'}`}
+                  className={`w-full flex items-center gap-3 p-2 rounded-2xl transition-all group ${member.uid === currentUser.uid ? 'cursor-default opacity-80' : 'hover:bg-white/60 active:scale-[0.98]'}`}
                 >
                   <div className={`size-10 rounded-2xl ${member.avatarColor} flex items-center justify-center shrink-0 overflow-hidden`}>
                     {member.avatarUrl ? (
@@ -533,7 +537,11 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] font-black px-2 py-1 rounded-lg bg-blue-50 text-blue-500 uppercase tracking-wider">직원</span>
-                    {member.uid !== currentUser.uid && <span className="material-symbols-outlined text-slate-300 text-[16px]">chat_bubble_outline</span>}
+                    {member.uid !== currentUser.uid && (
+                      <span className="material-symbols-outlined text-slate-300 text-[16px] group-hover:text-primary transition-colors">
+                        chat_bubble_outline
+                      </span>
+                    )}
                   </div>
                 </button>
               ))}
