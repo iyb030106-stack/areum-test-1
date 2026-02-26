@@ -2,17 +2,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserRole } from '../types';
-import { getManualItem, deleteManualItem, ManualItem } from '../services/manualService';
+import { getManualItem, deleteManualItem, ManualItem, toggleScrapManual, checkIsScrapped } from '../services/manualService';
+import { FirestoreUser } from '../services/authService';
+import { auth } from '../services/firebase';
 
 interface TaskDetailProps {
   role?: UserRole;
+  currentUser: FirestoreUser;
 }
 
-const TaskDetail: React.FC<TaskDetailProps> = ({ role }) => {
+const TaskDetail: React.FC<TaskDetailProps> = ({ role, currentUser }) => {
   const { catId, taskId } = useParams<{ catId: string; taskId: string }>();
   const navigate = useNavigate();
   const [item, setItem] = useState<ManualItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isScrapped, setIsScrapped] = useState(false);
 
   useEffect(() => {
     if (!taskId) return;
@@ -20,7 +24,12 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ role }) => {
       setItem(data);
       setLoading(false);
     });
-  }, [taskId]);
+
+    // 스크랩 상태 확인
+    if (currentUser?.uid && taskId) {
+      checkIsScrapped(currentUser.uid, taskId).then(setIsScrapped);
+    }
+  }, [taskId, currentUser?.uid]);
 
   const handleDelete = async () => {
     if (!taskId) return;
@@ -34,6 +43,15 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ role }) => {
     if (!item) return;
     const contextPrompt = `'${item.title}' 매뉴얼의 단계를 수행하던 중 도움이 필요합니다. 특히 "${item.steps?.[0] || item.description}" 부분에 대해 더 자세히 설명해 주세요.`;
     navigate('/ai', { state: { prompt: contextPrompt } });
+  };
+
+  const handleScrap = async () => {
+    if (!currentUser?.uid || !taskId) {
+      alert('로그인이 필요한 기능입니다.');
+      return;
+    }
+    const newStatus = await toggleScrapManual(currentUser.uid, taskId);
+    setIsScrapped(newStatus);
   };
 
   if (loading) {
@@ -85,11 +103,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ role }) => {
           </div>
         ) : role === 'staff' ? (
           <button
-            onClick={() => alert('매뉴얼이 스크랩되었습니다.')}
-            className="size-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 active:scale-95 transition-all"
-            title="스크랩"
+            onClick={handleScrap}
+            className={`size-9 rounded-full flex items-center justify-center transition-all active:scale-95 ${isScrapped
+                ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                : 'bg-amber-50 text-amber-500'
+              }`}
+            title={isScrapped ? '스크랩 취소' : '스크랩'}
           >
-            <span className="material-symbols-outlined text-[20px] fill-1">bookmark</span>
+            <span className={`material-symbols-outlined text-[20px] ${isScrapped ? 'fill-1' : ''}`}>bookmark</span>
           </button>
         ) : (
           <div className="w-10" />

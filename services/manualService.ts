@@ -11,6 +11,7 @@ import {
     serverTimestamp,
     Timestamp,
     getDoc,
+    setDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -103,4 +104,48 @@ export const updateManualItem = async (
 /** 매뉴얼 삭제 */
 export const deleteManualItem = async (id: string): Promise<void> => {
     await deleteDoc(doc(db, 'manualItems', id));
+};
+
+/** 매뉴얼 스크랩 토글 */
+export const toggleScrapManual = async (uid: string, manualId: string): Promise<boolean> => {
+    const scrapRef = doc(db, 'users', uid, 'scraps', manualId);
+    const snap = await getDoc(scrapRef);
+
+    if (snap.exists()) {
+        await deleteDoc(scrapRef);
+        return false; // unscrapped
+    } else {
+        await setDoc(scrapRef, {
+            manualId,
+            scrappedAt: serverTimestamp()
+        });
+        return true; // scrapped
+    }
+};
+
+/** 특정 사용자의 스크랩 상태 확인 */
+export const checkIsScrapped = async (uid: string, manualId: string): Promise<boolean> => {
+    const snap = await getDoc(doc(db, 'users', uid, 'scraps', manualId));
+    return snap.exists();
+};
+
+/** 사용자의 스크랩한 매뉴얼 목록 실시간 구독 */
+export const subscribeToScrappedManuals = (
+    uid: string,
+    callback: (manuals: ManualItem[]) => void
+): (() => void) => {
+    const q = query(collection(db, 'users', uid, 'scraps'), orderBy('scrappedAt', 'desc'));
+
+    return onSnapshot(q, async (snapshot) => {
+        const manualIds = snapshot.docs.map(d => d.data().manualId);
+        if (manualIds.length === 0) {
+            callback([]);
+            return;
+        }
+
+        // 각 매뉴얼의 상세 정보를 가져옴
+        const manualPromises = manualIds.map(id => getManualItem(id));
+        const manuals = await Promise.all(manualPromises);
+        callback(manuals.filter((m): m is ManualItem => m !== null));
+    });
 };

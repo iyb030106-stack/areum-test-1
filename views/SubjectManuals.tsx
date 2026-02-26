@@ -31,7 +31,7 @@ const SubjectManuals: React.FC = () => {
       <header className="px-6 pt-14 pb-10 relative z-10">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="size-2 bg-rose-500 rounded-full animate-pulse shadow-sm shadow-rose-500/50"></span>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Hub</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">학습 허브</p>
         </div>
         <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">수업 가이드</h1>
       </header>
@@ -77,7 +77,7 @@ const SubjectManuals: React.FC = () => {
         ) : (
           <section className="animate-fade-in">
             <div className="flex items-center gap-4 mb-8 px-1">
-              <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap">Subject Manuals</h2>
+              <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap">과목별 매뉴얼</h2>
               <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"></div>
             </div>
             <div className="grid grid-cols-2 gap-5">

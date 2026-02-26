@@ -4,6 +4,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getManualItem, createManualItem, updateManualItem } from '../services/manualService';
 import { auth } from '../services/firebase';
 
+const AVAILABLE_ICONS = [
+  'description', 'menu_book', 'library_books', 'sticky_note_2',
+  'checklist', 'rule', 'fact_check', 'event_note',
+  'school', 'history_edu', 'assignment', 'chrome_reader_mode',
+  'campaign', 'forum', 'support_agent', 'groups',
+  'settings', 'build', 'print', 'computer',
+  'payments', 'monetization_on', 'receipt_long', 'account_balance',
+  'emoji_events', 'workspace_premium', 'star', 'thumb_up',
+  'warning', 'error', 'medical_services', 'security'
+];
+
 const ManualEdit: React.FC = () => {
   const { catId, taskId } = useParams<{ catId: string; taskId: string }>();
   const navigate = useNavigate();
@@ -170,14 +181,25 @@ const ManualEdit: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 ml-1">아이콘 (Material Symbols 이름)</label>
-              <input
-                type="text"
-                value={icon}
-                onChange={(e) => setIcon(e.target.value)}
-                className="w-full p-4 rounded-2xl bg-white/55 backdrop-blur-md border border-white/40 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all font-bold text-slate-900"
-                placeholder="예: description, rule, print"
-              />
+              <label className="text-[11px] font-bold text-slate-500 ml-1">아이콘 선택 (현재 선택됨: <span className="material-symbols-outlined align-middle text-[14px] text-primary">{icon}</span>)</label>
+              <div className="p-4 rounded-2xl bg-white/55 backdrop-blur-md border border-white/40 h-48 overflow-y-auto custom-scrollbar">
+                <div className="grid grid-cols-6 gap-3">
+                  {AVAILABLE_ICONS.map((iconName) => (
+                    <button
+                      key={iconName}
+                      type="button"
+                      onClick={() => setIcon(iconName)}
+                      className={`flex items-center justify-center p-3 rounded-xl transition-all active:scale-95 ${icon === iconName
+                          ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
+                          : 'bg-white text-slate-400 hover:bg-slate-50 hover:text-slate-600 border border-slate-100'
+                        }`}
+                      title={iconName}
+                    >
+                      <span className="material-symbols-outlined text-[24px] pointer-events-none">{iconName}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>

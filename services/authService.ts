@@ -2,9 +2,10 @@ import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
+    deleteUser,
     User,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserRole } from '../types';
 
@@ -18,6 +19,7 @@ export interface FirestoreUser {
     avatarColor: string;
     avatarTextColor: string;
     initial: string;
+    avatarUrl?: string;
     createdAt: Timestamp;
 }
 
@@ -84,5 +86,28 @@ export const getUserData = async (uid: string): Promise<FirestoreUser | null> =>
     return { uid, ...snap.data() } as FirestoreUser;
 };
 
+/** 프로필 업데이트 (이름, 직책, 아바타 URL 등) */
+export const updateUserProfile = async (
+    uid: string,
+    data: Partial<Omit<FirestoreUser, 'uid' | 'createdAt' | 'email' | 'role'>>
+): Promise<void> => {
+    import('firebase/firestore').then(({ updateDoc }) => {
+        updateDoc(doc(db, 'users', uid), data);
+    });
+};
+
 /** 로그아웃 */
 export const logoutUser = () => signOut(auth);
+
+/** 계정 탈퇴 (Firestore 데이터 삭제 + Auth 계정 삭제) */
+export const deleteUserAccount = async (uid: string): Promise<void> => {
+    const user = auth.currentUser;
+    if (!user || user.uid !== uid) throw new Error('인증된 사용자가 아닙니다.');
+
+    // 1. Firestore 유저 데이터 삭제
+    await deleteDoc(doc(db, 'users', uid));
+
+    // 2. Firebase Auth 계정 삭제
+    // 참고: 보안상 최근 로그인하지 않은 경우 재인증 오류가 날 수 있음
+    await deleteUser(user);
+};

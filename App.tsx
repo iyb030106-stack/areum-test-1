@@ -22,6 +22,8 @@ import ManualEdit from './views/ManualEdit';
 import AnnouncementEdit from './views/AnnouncementEdit';
 import MyActivityDetail from './views/MyActivityDetail';
 import ChatRoom from './views/ChatRoom';
+import FAQList from './views/FAQList';
+import FAQEdit from './views/FAQEdit';
 import { UserRole } from './types';
 
 const LoadingScreen = () => (
@@ -91,12 +93,15 @@ const App: React.FC = () => {
           <Route path="/announcements/:id" element={<AnnouncementDetail role={role} />} />
           <Route path="/announcements/new" element={<AnnouncementEdit />} />
           <Route path="/announcements/:id/edit" element={<AnnouncementEdit />} />
+          <Route path="/faq" element={<FAQList role={role} />} />
+          <Route path="/faq/new" element={<FAQEdit />} />
+          <Route path="/faq/:id/edit" element={<FAQEdit />} />
           <Route path="/mypage" element={<StoreInfo role={role} currentUser={currentUser} onLogout={handleLogout} />} />
           <Route path="/mypage/activity" element={<MyActivityDetail />} />
           <Route path="/chat/:memberId" element={<ChatRoom currentUser={currentUser} />} />
           <Route path="/manuals/:catId" element={<ManualCategory role={role} />} />
           <Route path="/manuals/:catId/new" element={<ManualEdit />} />
-          <Route path="/manuals/:catId/:taskId" element={<TaskDetail role={role} />} />
+          <Route path="/manuals/:catId/:taskId" element={<TaskDetail role={role} currentUser={currentUser} />} />
           <Route path="/manuals/:catId/:taskId/edit" element={<ManualEdit />} />
 
           {role === 'admin' && (

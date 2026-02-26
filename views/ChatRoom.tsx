@@ -23,16 +23,16 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
 
     const chatId = memberId ? getChatId(currentUser.uid, memberId) : '';
 
-    // 상대방 유저 정보 가져오기
+    // 상대방 유저 정보 실시간 구독
     useEffect(() => {
         if (!memberId) return;
-        const fetchUser = async () => {
-            const snap = await getDoc(doc(db, 'users', memberId));
+        const { onSnapshot, doc } = require('firebase/firestore');
+        const unsubscribe = onSnapshot(doc(db, 'users', memberId), (snap: any) => {
             if (snap.exists()) {
                 setOtherUser({ uid: snap.id, ...snap.data() } as FirestoreUser);
             }
-        };
-        fetchUser();
+        });
+        return unsubscribe;
     }, [memberId]);
 
     // 실시간 메시지 구독
@@ -95,8 +95,12 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
                 >
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>
-                <div className={`size-10 rounded-2xl ${otherUser.avatarColor} flex items-center justify-center shrink-0`}>
-                    <span className={`text-sm font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
+                <div className={`size-10 rounded-2xl ${otherUser.avatarColor} flex items-center justify-center shrink-0 overflow-hidden`}>
+                    {otherUser.avatarUrl ? (
+                        <img src={otherUser.avatarUrl} alt={otherUser.name} className="w-full h-full object-cover" />
+                    ) : (
+                        <span className={`text-sm font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
+                    )}
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-black text-slate-900 dark:text-white">{otherUser.name}</p>
@@ -138,8 +142,12 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
             <div className="flex-1 overflow-y-auto no-scrollbar px-4 pb-4 space-y-3">
                 {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-48 gap-2">
-                        <div className={`size-14 rounded-[1.75rem] ${otherUser.avatarColor} flex items-center justify-center`}>
-                            <span className={`text-xl font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
+                        <div className={`size-14 rounded-[1.75rem] ${otherUser.avatarColor} flex items-center justify-center overflow-hidden`}>
+                            {otherUser.avatarUrl ? (
+                                <img src={otherUser.avatarUrl} alt={otherUser.name} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className={`text-xl font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
+                            )}
                         </div>
                         <p className="text-sm font-black text-slate-800 dark:text-white mt-1">{otherUser.name}</p>
                         <p className="text-[11px] text-slate-300 font-medium mt-3">메시지를 보내 대화를 시작해보세요</p>
@@ -156,8 +164,12 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
                             className={`flex items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'} ${isSame ? 'mt-0.5' : 'mt-5'}`}
                         >
                             {!isMe && (
-                                <div className={`size-8 rounded-xl ${otherUser.avatarColor} flex items-center justify-center shrink-0 ${isSame ? 'opacity-0 pointer-events-none' : ''}`}>
-                                    <span className={`text-xs font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
+                                <div className={`size-8 rounded-xl ${otherUser.avatarColor} flex items-center justify-center shrink-0 overflow-hidden ${isSame ? 'opacity-0 pointer-events-none' : ''}`}>
+                                    {otherUser.avatarUrl ? (
+                                        <img src={otherUser.avatarUrl} alt={otherUser.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className={`text-xs font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
+                                    )}
                                 </div>
                             )}
                             <div className={`flex flex-col max-w-[72%] ${isMe ? 'items-end' : 'items-start'}`}>
@@ -167,8 +179,8 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
                                 <div className={`flex items-end gap-1.5 ${isMe ? 'flex-row' : 'flex-row-reverse'}`}>
                                     <span className="text-[9px] text-slate-400 font-bold mb-0.5 shrink-0">{formatTime(msg.timestamp)}</span>
                                     <div className={`px-4 py-2.5 text-sm font-medium leading-relaxed break-words ${isMe
-                                            ? 'bg-primary text-white rounded-2xl rounded-br-sm shadow-lg shadow-primary/20'
-                                            : 'bg-white/90 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-white/60 dark:border-slate-700 rounded-2xl rounded-bl-sm shadow-sm'
+                                        ? 'bg-primary text-white rounded-2xl rounded-br-sm shadow-lg shadow-primary/20'
+                                        : 'bg-white/90 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-white/60 dark:border-slate-700 rounded-2xl rounded-bl-sm shadow-sm'
                                         }`}>
                                         {msg.text}
                                     </div>
@@ -180,8 +192,12 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
 
                 {isTyping && (
                     <div className="flex items-end gap-2 mt-5">
-                        <div className={`size-8 rounded-xl ${otherUser.avatarColor} flex items-center justify-center shrink-0`}>
-                            <span className={`text-xs font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
+                        <div className={`size-8 rounded-xl ${otherUser.avatarColor} flex items-center justify-center shrink-0 overflow-hidden`}>
+                            {otherUser.avatarUrl ? (
+                                <img src={otherUser.avatarUrl} alt={otherUser.name} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className={`text-xs font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
+                            )}
                         </div>
                         <div className="bg-white/90 border border-white/60 rounded-2xl rounded-bl-sm px-5 py-3.5 shadow-sm">
                             <div className="flex gap-1 items-center h-4">

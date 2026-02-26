@@ -84,8 +84,8 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
               key={cat}
               onClick={() => setActiveFilter(cat as any)}
               className={`px-5 py-2.5 rounded-2xl text-[11px] font-black whitespace-nowrap transition-all border ${activeFilter === cat
-                  ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
-                  : 'bg-white/55 dark:bg-slate-800/55 text-slate-400 border-white/40 dark:border-slate-700'
+                ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                : 'bg-white/55 dark:bg-slate-800/55 text-slate-400 border-white/40 dark:border-slate-700'
                 }`}
             >
               {cat}
@@ -95,25 +95,44 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
       </header>
 
       <main className="px-6 pt-8 space-y-6 relative z-10">
+        {/* Q&A 배너 */}
+        <div
+          onClick={() => navigate('/faq')}
+          className="group relative overflow-hidden px-5 py-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl shadow-lg shadow-amber-200/20 cursor-pointer active:scale-[0.98] transition-all"
+        >
+          <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-110 transition-transform">
+            <span className="material-symbols-outlined text-[60px] text-white">quiz</span>
+          </div>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h4 className="text-white font-black text-[15px] mb-0.5 flex items-center gap-2">
+                업무가 궁금하신가요?
+              </h4>
+              <p className="text-white/80 text-[10px] font-bold">신입/기존 보직자용 자주 묻는 질문(Q&A)</p>
+            </div>
+            <span className="material-symbols-outlined text-white/50 group-hover:text-white transition-colors">arrow_forward</span>
+          </div>
+        </div>
+
         {filteredUpdates.length > 0 ? (
           filteredUpdates.map((update) => (
             <div
               key={update.id}
               onClick={() => navigate(`/announcements/${update.id}`)}
               className={`group relative overflow-hidden p-6 bg-white/55 backdrop-blur-md dark:bg-slate-800/55 rounded-[2.5rem] border transition-all shadow-sm active:scale-[0.98] cursor-pointer hover:border-primary/20 ${update.isImportant
-                  ? 'border-l-4 border-l-primary/30 border-white/40 dark:border-slate-700'
-                  : 'border-white/40 dark:border-slate-700'
+                ? 'border-l-4 border-l-primary/30 border-white/40 dark:border-slate-700'
+                : 'border-white/40 dark:border-slate-700'
                 }`}
             >
               <div className="flex items-center gap-2 mb-3">
                 <span
                   className={`text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-widest ${update.category === '필독'
-                      ? 'bg-red-100/50 text-red-600'
-                      : update.category === '매뉴얼'
-                        ? 'bg-blue-100/50 text-blue-600'
-                        : update.category === '일정'
-                          ? 'bg-emerald-100/50 text-emerald-600'
-                          : 'bg-slate-100/50 text-slate-600'
+                    ? 'bg-red-100/50 text-red-600'
+                    : update.category === '매뉴얼'
+                      ? 'bg-blue-100/50 text-blue-600'
+                      : update.category === '일정'
+                        ? 'bg-emerald-100/50 text-emerald-600'
+                        : 'bg-slate-100/50 text-slate-600'
                     }`}
                 >
                   {update.category}
