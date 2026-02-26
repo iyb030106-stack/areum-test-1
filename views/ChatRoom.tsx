@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { getChatId, sendMessage, subscribeToMessages, deleteChatRoom, ChatMessage } from '../services/chatService';
 import { FirestoreUser } from '../services/authService';
@@ -26,8 +26,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
     // 상대방 유저 정보 실시간 구독
     useEffect(() => {
         if (!memberId) return;
-        const { onSnapshot, doc } = require('firebase/firestore');
-        const unsubscribe = onSnapshot(doc(db, 'users', memberId), (snap: any) => {
+        const unsubscribe = onSnapshot(doc(db, 'users', memberId), (snap) => {
             if (snap.exists()) {
                 setOtherUser({ uid: snap.id, ...snap.data() } as FirestoreUser);
             }
@@ -86,7 +85,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-[#F5F8FF] dark:bg-slate-950">
+        <div className="flex flex-col h-full bg-[#F5F8FF] dark:bg-slate-950 overflow-hidden">
             {/* 헤더 */}
             <header className="shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-white/50 dark:border-slate-800 px-4 py-3 flex items-center gap-3 z-20">
                 <button
