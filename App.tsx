@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './services/firebase';
@@ -36,6 +36,9 @@ const LoadingScreen = () => (
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<FirestoreUser | null>(null);
   const [loading, setLoading] = useState(true);
+  // 로그인 직후 loginUser()에서 이미 가져온 userData를 임시 보관
+  // → onAuthStateChanged가 Firestore를 중복 읽지 않도록 재사용
+  const pendingUserDataRef = useRef<FirestoreUser | null>(null);
 
   useEffect(() => {
     const theme = localStorage.getItem('theme');
@@ -47,8 +50,15 @@ const App: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const userData = await getUserData(firebaseUser.uid);
-        setCurrentUser(userData);
+        // 로그인 직후라면 이미 캐시된 데이터를 사용 (Firestore 읽기 절약)
+        if (pendingUserDataRef.current) {
+          setCurrentUser(pendingUserDataRef.current);
+          pendingUserDataRef.current = null;
+        } else {
+          // 앱 새로고침 등 페이지 재진입 시에만 Firestore에서 읽음
+          const userData = await getUserData(firebaseUser.uid);
+          setCurrentUser(userData);
+        }
       } else {
         setCurrentUser(null);
       }
@@ -78,7 +88,7 @@ const App: React.FC = () => {
         <div className="w-full max-w-md min-h-screen bg-slate-50 dark:bg-slate-950 shadow-2xl overflow-hidden relative">
           <Router>
             <Routes>
-              <Route path="/login" element={<Login onLogin={setCurrentUser} />} />
+              <Route path="/login" element={<Login onLogin={(userData) => { pendingUserDataRef.current = userData; setCurrentUser(userData); }} />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </Router>
