@@ -1,9 +1,10 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MANUAL_CATEGORIES, MANUAL_ITEMS } from '../constants';
+import { MANUAL_CATEGORIES } from '../constants';
 import { FlowyIcon } from '../components/Layout';
 import { UserRole } from '../types';
+import { subscribeToAllManuals, ManualItem } from '../services/manualService';
 
 interface HomeProps {
   role?: UserRole;
@@ -16,6 +17,12 @@ const Home: React.FC<HomeProps> = ({ role }) => {
   const recognitionRef = useRef<any>(null);
 
   const adminCategories = MANUAL_CATEGORIES.filter(c => c.type === 'admin');
+  const [allManuals, setAllManuals] = useState<ManualItem[]>([]);
+
+  useEffect(() => {
+    const unsub = subscribeToAllManuals(setAllManuals);
+    return unsub;
+  }, []);
 
   const initSpeechRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitRecognition;
@@ -61,11 +68,12 @@ const Home: React.FC<HomeProps> = ({ role }) => {
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
-    return MANUAL_ITEMS.filter(item => 
-      item.title.toLowerCase().includes(q) || 
+    return allManuals.filter(item =>
+      item.title.toLowerCase().includes(q) ||
       item.description.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [searchQuery, allManuals]);
+
 
   return (
     <div className="pb-40 min-h-screen relative">
@@ -91,9 +99,9 @@ const Home: React.FC<HomeProps> = ({ role }) => {
         <div className="relative">
           <div className={`flex items-center bg-white/55 backdrop-blur-xl dark:bg-slate-900/55 rounded-[2rem] border transition-all duration-300 shadow-xl shadow-blue-200/10 ${searchQuery ? 'border-primary ring-4 ring-primary/5' : 'border-white/60 dark:border-slate-800'}`}>
             <span className="material-symbols-outlined pl-5 text-slate-300">search</span>
-            <input 
-              className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-5 px-3 font-bold dark:text-white" 
-              placeholder="무엇을 도와드릴까요?" 
+            <input
+              className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-5 px-3 font-bold dark:text-white"
+              placeholder="무엇을 도와드릴까요?"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -136,7 +144,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
         ) : (
           <div className="space-y-12 animate-fade-in">
             {/* AI 가이드 카드 (Outlined Style) */}
-            <div 
+            <div
               onClick={() => navigate('/ai')}
               className="border-2 border-primary/20 bg-white/30 backdrop-blur-md p-8 rounded-[3rem] shadow-xl shadow-blue-100/20 flex items-center gap-6 active:scale-[0.98] transition-all group relative"
             >
@@ -145,7 +153,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
               </div>
               <div className="flex-1 z-10">
                 <h3 className="text-slate-800 dark:text-white text-xl font-black tracking-tight">Flowy</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mt-1.5 tracking-tight leading-relaxed">물어볼 곳이 필요할 때,<br/>Flowy에게 도움을 요청하세요.</p>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mt-1.5 tracking-tight leading-relaxed">물어볼 곳이 필요할 때,<br />Flowy에게 도움을 요청하세요.</p>
               </div>
               <div className="size-10 rounded-full bg-primary/5 flex items-center justify-center text-primary z-10">
                 <span className="material-symbols-outlined text-xl">arrow_forward</span>
@@ -160,7 +168,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
               </div>
               <div className="grid grid-cols-2 gap-5">
                 {adminCategories.map((cat) => (
-                  <div 
+                  <div
                     key={cat.id}
                     onClick={() => navigate(`/manuals/${cat.id}`)}
                     className="bg-white/55 backdrop-blur-md dark:bg-slate-900/55 p-6 rounded-[2.5rem] border border-white/40 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all cursor-pointer active:scale-95 flex flex-col items-center text-center gap-4"

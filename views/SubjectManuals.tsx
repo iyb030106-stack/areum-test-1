@@ -1,29 +1,37 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MANUAL_CATEGORIES, MANUAL_ITEMS } from '../constants';
+import { MANUAL_CATEGORIES } from '../constants';
+import { subscribeToAllManuals, ManualItem } from '../services/manualService';
 
 const SubjectManuals: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [allManuals, setAllManuals] = useState<ManualItem[]>([]);
+
   const subjectCategories = MANUAL_CATEGORIES.filter(c => c.type === 'subject');
+
+  useEffect(() => {
+    const unsub = subscribeToAllManuals(setAllManuals);
+    return unsub;
+  }, []);
 
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
-    return MANUAL_ITEMS.filter(item => 
+    return allManuals.filter(item =>
       (item.title.toLowerCase().includes(q) || item.description.toLowerCase().includes(q)) &&
       MANUAL_CATEGORIES.find(c => c.id === item.categoryId)?.type === 'subject'
     );
-  }, [searchQuery]);
+  }, [searchQuery, allManuals]);
+
 
   return (
     <div className="pb-40 min-h-screen relative">
       <header className="px-6 pt-14 pb-10 relative z-10">
         <div className="flex items-center gap-2 mb-1.5">
-           <span className="size-2 bg-rose-500 rounded-full animate-pulse shadow-sm shadow-rose-500/50"></span>
-           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Hub</p>
+          <span className="size-2 bg-rose-500 rounded-full animate-pulse shadow-sm shadow-rose-500/50"></span>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Hub</p>
         </div>
         <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">수업 가이드</h1>
       </header>
@@ -32,9 +40,9 @@ const SubjectManuals: React.FC = () => {
         <div className="relative">
           <div className={`flex items-center bg-white/55 backdrop-blur-xl dark:bg-slate-900/55 rounded-[1.75rem] border transition-all duration-300 shadow-xl shadow-blue-200/10 ${searchQuery ? 'border-primary ring-4 ring-primary/5' : 'border-white/60 dark:border-slate-800'}`}>
             <span className="material-symbols-outlined pl-5 text-slate-300">search</span>
-            <input 
-              className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-4.5 px-3 font-bold dark:text-white" 
-              placeholder="과목 가이드를 검색하세요" 
+            <input
+              className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-4.5 px-3 font-bold dark:text-white"
+              placeholder="과목 가이드를 검색하세요"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -74,7 +82,7 @@ const SubjectManuals: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-5">
               {subjectCategories.map((cat) => (
-                <div 
+                <div
                   key={cat.id}
                   onClick={() => navigate(`/manuals/${cat.id}`)}
                   className="bg-white/55 backdrop-blur-md dark:bg-slate-900/55 p-6 rounded-[2.5rem] border border-white/40 shadow-sm hover:shadow-xl transition-all cursor-pointer active:scale-95 flex flex-col items-center text-center gap-4"

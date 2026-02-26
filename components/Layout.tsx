@@ -21,31 +21,31 @@ export const FlowyIcon = ({ className = "" }: FlowyIconProps) => (
         <stop offset="100%" stopColor="#E9D5FF" />
       </linearGradient>
     </defs>
-    
+
     {/* 구름 몸체 (더 뚱뚱하고 둥글둥글한 버전) */}
-    <path 
-      d="M6 19c-3.314 0-6-2.686-6-6s2.686-6 6-6c.188 0 .372.01.553.028C7.684 4.015 10.61 2 14 2c4.418 0 8 3.582 8 8 0 .14-.004.28-.011.419C21.156 10.74 24 13.036 24 16c0 3.314-2.686 6-6 6H6v-3z" 
-      fill="url(#flowyGradient)" 
+    <path
+      d="M6 19c-3.314 0-6-2.686-6-6s2.686-6 6-6c.188 0 .372.01.553.028C7.684 4.015 10.61 2 14 2c4.418 0 8 3.582 8 8 0 .14-.004.28-.011.419C21.156 10.74 24 13.036 24 16c0 3.314-2.686 6-6 6H6v-3z"
+      fill="url(#flowyGradient)"
       transform="translate(0, 0.5)"
     />
-    
+
     {/* 반짝임 (Sparkle) */}
-    <path 
-      d="M19 5L19.2 5.8L20 6L19.2 6.2L19 7L18.8 6.2L18 6L18.8 5.8L19 5Z" 
-      fill="white" 
+    <path
+      d="M19 5L19.2 5.8L20 6L19.2 6.2L19 7L18.8 6.2L18 6L18.8 5.8L19 5Z"
+      fill="white"
       fillOpacity="0.9"
     />
 
     {/* 얼굴: 눈 (중앙 정렬 조정) */}
     <circle cx="10" cy="12.5" r="0.8" fill="#334155" fillOpacity="0.85" />
     <circle cx="16" cy="12.5" r="0.8" fill="#334155" fillOpacity="0.85" />
-    
+
     {/* 얼굴: 미소 (중앙 정렬 조정) */}
-    <path 
-      d="M10 15.5C10 15.5 11.5 17 13 17C14.5 17 16 15.5 16 15.5" 
-      stroke="#334155" 
-      strokeWidth="1.2" 
-      strokeLinecap="round" 
+    <path
+      d="M10 15.5C10 15.5 11.5 17 13 17C14.5 17 16 15.5 16 15.5"
+      stroke="#334155"
+      strokeWidth="1.2"
+      strokeLinecap="round"
       strokeOpacity="0.85"
     />
   </svg>
@@ -60,7 +60,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   return (
     <div className="relative flex min-h-screen w-full flex-col max-w-md mx-auto bg-[#F5F8FF] dark:bg-slate-950 shadow-2xl overflow-hidden border-x border-slate-100 dark:border-slate-800 font-display">
       {/* Watercolor Blobs - Global Background */}
@@ -72,7 +72,7 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
         {children}
       </div>
 
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl border-t border-slate-100/50 dark:border-slate-800/50 px-6 pb-8 pt-3 z-50">
+      <nav className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl border-t border-slate-100/50 dark:border-slate-800/50 px-6 pb-8 pt-3 z-50 transition-transform duration-300 ${location.pathname.startsWith('/chat/') ? 'translate-y-full' : ''}`}>
         <div className="flex items-end justify-between px-2">
           <NavLink to="/" className={({ isActive }) => `flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
             <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/' ? 'fill-1' : ''}`}>grid_view</span>

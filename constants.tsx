@@ -1,6 +1,85 @@
 
 import { ManualCategory, ManualItem, StoreUpdate } from './types';
 
+export interface Member {
+  id: string;
+  name: string;
+  role: 'admin' | 'staff';
+  position: string;        // 직책 (예: 원장, 강사, 행정)
+  subject?: string;        // 담당 과목
+  joinDate: string;        // 입사일
+  avatarColor: string;     // 아바타 배경색 (tailwind class)
+  avatarTextColor: string; // 아바타 텍스트색
+  initial: string;         // 이름 첫 글자
+}
+
+export const MEMBERS: Member[] = [
+  {
+    id: 'member-1',
+    name: '김지영',
+    role: 'admin',
+    position: '원장',
+    joinDate: '2021-03-01',
+    avatarColor: 'bg-indigo-100',
+    avatarTextColor: 'text-indigo-600',
+    initial: '김',
+  },
+  {
+    id: 'member-2',
+    name: '박서연',
+    role: 'admin',
+    position: '매니저',
+    joinDate: '2022-07-15',
+    avatarColor: 'bg-violet-100',
+    avatarTextColor: 'text-violet-600',
+    initial: '박',
+  },
+  {
+    id: 'member-3',
+    name: '이민준',
+    role: 'staff',
+    position: '강사',
+    subject: 'Vocabulary / Fiction',
+    joinDate: '2023-02-10',
+    avatarColor: 'bg-blue-100',
+    avatarTextColor: 'text-blue-600',
+    initial: '이',
+  },
+  {
+    id: 'member-4',
+    name: '최하은',
+    role: 'staff',
+    position: '강사',
+    subject: 'Nonfiction / Writing',
+    joinDate: '2023-08-01',
+    avatarColor: 'bg-emerald-100',
+    avatarTextColor: 'text-emerald-600',
+    initial: '최',
+  },
+  {
+    id: 'member-5',
+    name: '정다은',
+    role: 'staff',
+    position: '강사',
+    subject: 'Grammar',
+    joinDate: '2024-01-20',
+    avatarColor: 'bg-rose-100',
+    avatarTextColor: 'text-rose-600',
+    initial: '정',
+  },
+  {
+    id: 'member-6',
+    name: '한수빈',
+    role: 'staff',
+    position: '행정',
+    joinDate: '2024-04-05',
+    avatarColor: 'bg-amber-100',
+    avatarTextColor: 'text-amber-600',
+    initial: '한',
+  },
+];
+
+
 export const MANUAL_CATEGORIES: ManualCategory[] = [
   // Admin Protocols
   { id: 'test-mgmt', name: '단어/성적관리', icon: 'fact_check', colorClass: 'text-indigo-500/80', bgClass: 'bg-indigo-50/50', type: 'admin' },
@@ -8,7 +87,7 @@ export const MANUAL_CATEGORIES: ManualCategory[] = [
   { id: 'printer-fix', name: '프린터 관리', icon: 'settings_suggest', colorClass: 'text-slate-500/80', bgClass: 'bg-slate-50/50', type: 'admin' },
   { id: 'report-card', name: '성적표 관리', icon: 'analytics', colorClass: 'text-violet-500/80', bgClass: 'bg-violet-50/50', type: 'admin' },
   { id: 'student-care', name: '학생/상담 관리', icon: 'face', colorClass: 'text-rose-500/80', bgClass: 'bg-rose-50/50', type: 'admin' },
-  
+
   // Subject Manuals
   { id: 'subj-vocab', name: 'Vocabulary', icon: 'Aa', colorClass: 'text-indigo-500/80', bgClass: 'bg-indigo-50/50', type: 'subject' },
   { id: 'subj-fiction', name: 'Fiction', icon: 'auto_stories', colorClass: 'text-emerald-500/80', bgClass: 'bg-emerald-50/50', type: 'subject' },

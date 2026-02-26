@@ -1,0 +1,29 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "manualItems",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "categoryId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "chats",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "participants",
+                    "arrayConfig": "CONTAINS"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}
