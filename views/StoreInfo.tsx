@@ -195,15 +195,15 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
 
       {/* 헤더 */}
       <header className="sticky top-0 z-20 flex items-center bg-white/55 dark:bg-slate-900/55 backdrop-blur-xl px-4 pt-14 pb-4 border-b border-white/40 dark:border-slate-800 justify-center">
+        <h2 className="text-slate-900 dark:text-white text-lg font-bold">마이페이지</h2>
         <button
           onClick={toggleTheme}
-          className="absolute left-4 top-[calc(3.5rem+8px)] size-10 rounded-full bg-white/50 dark:bg-slate-800/50 border border-white/40 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-amber-400 active:scale-95 transition-all shadow-sm"
+          className="absolute right-4 bottom-3 size-10 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-amber-400 active:scale-90 transition-all z-30 shadow-sm"
         >
-          <span className="material-symbols-outlined">
+          <span className="material-symbols-outlined text-[20px] fill-1">
             {isDarkMode ? 'light_mode' : 'dark_mode'}
           </span>
         </button>
-        <h2 className="text-slate-900 dark:text-white text-lg font-bold">마이페이지</h2>
       </header>
 
       {/* 프로필 카드 */}

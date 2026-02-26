@@ -10,13 +10,19 @@
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
   --radius-full: 9999px;
+  --dark-mode: class;
 }
 
+@variant dark (&:where(.dark, .dark *));
+
 @keyframes bounce-slow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(-5%);
     animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
+
   50% {
     transform: translateY(0);
     animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
