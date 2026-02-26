@@ -90,6 +90,23 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
     const unsub = subscribeToScrappedManuals(currentUser.uid, setScrappedManuals);
     return unsub;
   }, [currentUser?.uid, role]);
+
+  // 다크모드 설정
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
+  });
+
+  const toggleTheme = () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
   // 프로필 편집 상태
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState(currentUser?.name || '');
@@ -177,7 +194,15 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
     <div className="pb-32 min-h-screen relative">
 
       {/* 헤더 */}
-      <header className="sticky top-0 z-20 flex items-center bg-white/55 dark:bg-background-dark/55 backdrop-blur-xl px-4 pt-14 pb-4 border-b border-white/40 justify-center">
+      <header className="sticky top-0 z-20 flex items-center bg-white/55 dark:bg-slate-900/55 backdrop-blur-xl px-4 pt-14 pb-4 border-b border-white/40 dark:border-slate-800 justify-center">
+        <button
+          onClick={toggleTheme}
+          className="absolute left-4 top-[calc(3.5rem+8px)] size-10 rounded-full bg-white/50 dark:bg-slate-800/50 border border-white/40 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-amber-400 active:scale-95 transition-all shadow-sm"
+        >
+          <span className="material-symbols-outlined">
+            {isDarkMode ? 'light_mode' : 'dark_mode'}
+          </span>
+        </button>
         <h2 className="text-slate-900 dark:text-white text-lg font-bold">마이페이지</h2>
       </header>
 
