@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../types';
 import { FirestoreUser, updateUserProfile, deleteUserAccount } from '../services/authService';
-import { subscribeToUserChats, deleteChatRoom, ChatRoom as ChatRoomType } from '../services/chatService';
+import { subscribeToUserChats, deleteChatRoomForUser, ChatRoom as ChatRoomType } from '../services/chatService';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Announcement, formatTimeAgo } from '../services/announcementService';
@@ -44,8 +44,8 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
 
   const handleDeleteChat = async (chatId: string, memberName: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm(`${memberName}님과의 채팅방을 삭제할까요?`)) {
-      await deleteChatRoom(chatId);
+    if (window.confirm(`${memberName}님과의 채팅을 목록에서 삭제할까요?\n상대방의 채팅창에는 영향을 주지 않습니다.`)) {
+      await deleteChatRoomForUser(chatId, currentUser.uid);
     }
   };
 

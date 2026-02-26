@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { getChatId, sendMessage, subscribeToMessages, deleteChatRoom, ChatMessage } from '../services/chatService';
+import { getChatId, sendMessage, subscribeToMessages, deleteChatRoomForUser, ChatMessage } from '../services/chatService';
 import { FirestoreUser } from '../services/authService';
 
 interface ChatRoomProps {
@@ -105,8 +105,8 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
                     <div className="absolute top-full right-4 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-fade-in py-1">
                         <button
                             onClick={() => {
-                                if (window.confirm('채팅방을 나갈까요?')) {
-                                    deleteChatRoom(chatId).then(() => navigate('/mypage'));
+                                if (window.confirm('채팅방을 나갈까요?\n대화 목록에서만 사라지며, 상대방이 메시지를 보내면 다시 나타납니다.')) {
+                                    deleteChatRoomForUser(chatId, currentUser.uid).then(() => navigate('/mypage'));
                                 }
                             }}
                             className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors"

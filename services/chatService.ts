@@ -25,6 +25,7 @@ export interface ChatMessage {
 export interface ChatRoom {
     id: string;
     participants: string[];
+    deletedBy?: string[]; // 삭제를 누른 사용자 ID 목록
     lastMessage: string;
     lastMessageTime: Timestamp | null;
 }
@@ -54,6 +55,7 @@ export const sendMessage = async (
             participants: [senderId, otherUid],
             lastMessage: text,
             lastMessageTime: serverTimestamp(),
+            deletedBy: [], // 메시지가 전송되면 양쪽 모두에게 다시 나타나게 함
         },
         { merge: true },
     );
@@ -84,20 +86,41 @@ export const subscribeToUserChats = (
 ): (() => void) => {
     const q = query(
         collection(db, 'chats'),
-        where('participants', 'array-contains', uid),
+        where('participants', 'array-contains', uid)
     );
     return onSnapshot(q, (snapshot) => {
-        const chats = snapshot.docs.map((d) => ({
-            id: d.id,
-            ...d.data(),
-        })) as ChatRoom[];
-        callback(chats);
+        const chats = snapshot.docs
+            .map((d) => ({
+                id: d.id,
+                ...d.data(),
+            })) as ChatRoom[];
+
+        // 내가 삭제하지 않은 채팅방만 필터링
+        const activeChats = chats.filter(chat =>
+            !chat.deletedBy || !chat.deletedBy.includes(uid)
+        );
+
+        callback(activeChats);
     });
 };
 
-/** 채팅방 삭제 (메시지 전체 + 채팅방 문서) */
-export const deleteChatRoom = async (chatId: string): Promise<void> => {
-    const messages = await getDocs(collection(db, 'chats', chatId, 'messages'));
-    await Promise.all(messages.docs.map((d) => deleteDoc(d.ref)));
-    await deleteDoc(doc(db, 'chats', chatId));
+/** 채팅방 독립적 삭제 (나에게만 안 보이게 처리) */
+export const deleteChatRoomForUser = async (chatId: string, uid: string): Promise<void> => {
+    const chatRef = doc(db, 'chats', chatId);
+    const snap = await getDocs(query(collection(db, 'chats'), where('__name__', '==', chatId)));
+
+    if (snap.empty) return;
+
+    const chatData = snap.docs[0].data() as ChatRoom;
+    const currentDeletedBy = chatData.deletedBy || [];
+
+    if (!currentDeletedBy.includes(uid)) {
+        const newDeletedBy = [...currentDeletedBy, uid];
+
+        // 만약 참여자 전원이 삭제했다면? (선택사항: 원하면 진짜 삭제하거나 그대로 둠)
+        // 여기서는 그냥 나에게만 안 보이게 필드 업데이트만 함
+        await setDoc(chatRef, {
+            deletedBy: newDeletedBy
+        }, { merge: true });
+    }
 };
