@@ -1,0 +1,136 @@
+
+import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { STORE_UPDATES } from '../constants';
+import { UserRole } from '../types';
+
+interface AnnouncementsProps {
+  role?: UserRole;
+}
+
+const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
+  const navigate = useNavigate();
+  const [activeFilter, setActiveFilter] = useState<'전체' | '필독' | '일반' | '매뉴얼' | '일정'>('전체');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredUpdates = useMemo(() => {
+    let list = STORE_UPDATES;
+    if (activeFilter !== '전체') {
+      list = list.filter(u => u.category === activeFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(u => 
+        u.title.toLowerCase().includes(q) || 
+        u.description.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [activeFilter, searchQuery]);
+
+  const categories = ['전체', '필독', '일반', '매뉴얼', '일정'];
+
+  return (
+    <div className="pb-32 min-h-screen relative">
+      <header className="sticky top-0 z-20 bg-white/55 dark:bg-slate-900/55 backdrop-blur-xl border-b border-white/40 shadow-sm">
+        <div className="px-6 pt-14 pb-4">
+          <div className="flex items-center gap-2 mb-1.5">
+             <span className="size-2 bg-primary rounded-full animate-pulse shadow-sm shadow-primary/50"></span>
+             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academy Bulletin</p>
+          </div>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">공지사항</h1>
+            {role === 'admin' && (
+              <button 
+                onClick={() => navigate('/announcements/new')}
+                className="size-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 active:scale-95 transition-all"
+              >
+                <span className="material-symbols-outlined">add</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 검색창 */}
+        <div className="px-6 mb-4">
+          <div className="relative flex items-center bg-white/55 dark:bg-slate-800/55 rounded-2xl border border-white/40 dark:border-slate-700 px-4 py-3">
+            <span className="material-symbols-outlined text-slate-300 text-xl mr-2">search</span>
+            <input 
+              type="text" 
+              className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full dark:text-white p-0" 
+              placeholder="공지 내용을 검색하세요"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        <div className="flex gap-2 overflow-x-auto no-scrollbar px-6 pb-4">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveFilter(cat as any)}
+              className={`px-5 py-2.5 rounded-2xl text-[11px] font-black whitespace-nowrap transition-all border ${
+                activeFilter === cat 
+                  ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
+                  : 'bg-white/55 dark:bg-slate-800/55 text-slate-400 border-white/40 dark:border-slate-700'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <main className="px-6 pt-8 space-y-6 relative z-10">
+        {filteredUpdates.length > 0 ? (
+          filteredUpdates.map((update) => (
+            <div 
+              key={update.id} 
+              onClick={() => navigate(`/announcements/${update.id}`)}
+              className={`group relative overflow-hidden p-6 bg-white/55 backdrop-blur-md dark:bg-slate-800/55 rounded-[2.5rem] border transition-all shadow-sm active:scale-[0.98] cursor-pointer hover:border-primary/20 ${
+                update.isImportant 
+                  ? 'border-l-4 border-l-primary/30 border-white/40 dark:border-slate-700' 
+                  : 'border-white/40 dark:border-slate-700'
+              }`}
+            >
+              {/* 이전 Urgent 배지 섹션 제거됨 */}
+              
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-widest ${
+                  update.category === '필독' ? 'bg-red-100/50 text-red-600' :
+                  update.category === '매뉴얼' ? 'bg-blue-100/50 text-blue-600' :
+                  update.category === '일정' ? 'bg-emerald-100/50 text-emerald-600' :
+                  'bg-slate-100/50 text-slate-600'
+                }`}>
+                  {update.category}
+                </span>
+                <span className="size-1 bg-slate-200 rounded-full"></span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{update.timeAgo}</span>
+              </div>
+
+              <h3 className="text-lg font-black mb-2 text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors">
+                {update.title}
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed line-clamp-2">
+                {update.description}
+              </p>
+              
+              <div className="mt-4 pt-4 border-t border-white/20 dark:border-slate-700/50 flex justify-between items-center">
+                <span className="text-[11px] font-black text-slate-300">상세보기</span>
+                <span className="material-symbols-outlined text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-24 text-center">
+             <span className="material-symbols-outlined text-slate-200 text-6xl mb-4">search_off</span>
+             <p className="text-slate-400 text-sm font-black italic">검색 결과 또는 공지가 없습니다</p>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default Announcements;
