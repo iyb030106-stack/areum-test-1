@@ -62,14 +62,6 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
         await sendMessage(chatId, currentUser.uid, currentUser.name, memberId, text);
     };
 
-    const handleDelete = async () => {
-        if (!otherUser) return;
-        if (window.confirm(`${otherUser.name}님과의 채팅방을 삭제할까요?`)) {
-            await deleteChatRoom(chatId);
-            navigate(-1);
-        }
-    };
-
     const formatTime = (ts: any) => {
         if (!ts) return '';
         const date = ts.toDate ? ts.toDate() : new Date(ts);
@@ -78,74 +70,63 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
 
     if (!otherUser) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen">
+            <div className="flex flex-col items-center justify-center fixed inset-0 bg-white dark:bg-slate-950 z-[100]">
                 <div className="size-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-full bg-[#F5F8FF] dark:bg-slate-950 overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-[#F5F8FF] dark:bg-slate-950 max-w-md mx-auto h-[100dvh]">
             {/* 헤더 */}
-            <header className="shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-white/50 dark:border-slate-800 px-4 py-3 flex items-center gap-3 z-20">
+            <header className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-white/50 dark:border-slate-800 px-4 py-3 flex items-center gap-3 z-20">
                 <button
                     onClick={() => navigate(-1)}
-                    className="text-primary p-1.5 active:scale-95 transition-all rounded-xl hover:bg-primary/5"
+                    className="size-10 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100 transition-colors"
                 >
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>
-                <div className={`size-10 rounded-2xl ${otherUser.avatarColor} flex items-center justify-center shrink-0 overflow-hidden`}>
-                    {otherUser.avatarUrl ? (
-                        <img src={otherUser.avatarUrl} alt={otherUser.name} className="w-full h-full object-cover" />
-                    ) : (
-                        <span className={`text-sm font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
-                    )}
-                </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-slate-900 dark:text-white">{otherUser.name}</p>
-                    <p className="text-[10px] text-slate-400 font-bold">
-                        {otherUser.position}{otherUser.subject ? ` · ${otherUser.subject}` : ''}
+                    <h2 className="text-base font-black text-slate-900 dark:text-white truncate">{otherUser.name}</h2>
+                    <p className="text-[10px] text-emerald-500 font-bold flex items-center gap-1.5">
+                        <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></span>
+                        현재 활동 중
                     </p>
                 </div>
-                <div className="relative">
-                    <button
-                        onClick={e => { e.stopPropagation(); setShowMenu(v => !v); }}
-                        className="p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-xl hover:bg-slate-100/60"
-                    >
-                        <span className="material-symbols-outlined text-[20px]">more_vert</span>
-                    </button>
-                    {showMenu && (
-                        <div className="absolute right-0 top-10 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-40 z-50 animate-fade-in overflow-hidden">
-                            <button
-                                onClick={handleDelete}
-                                className="w-full flex items-center gap-2.5 px-4 py-3.5 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                            >
-                                <span className="material-symbols-outlined text-[18px]">delete</span>
-                                채팅방 삭제
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <button
+                    onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+                    className="size-10 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100 transition-colors"
+                >
+                    <span className="material-symbols-outlined">more_vert</span>
+                </button>
+
+                {/* 메뉴 팝오버 */}
+                {showMenu && (
+                    <div className="absolute top-full right-4 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-fade-in py-1">
+                        <button
+                            onClick={() => {
+                                if (window.confirm('채팅방을 나갈까요?')) {
+                                    deleteChatRoom(chatId).then(() => navigate('/mypage'));
+                                }
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                            채팅방 삭제
+                        </button>
+                    </div>
+                )}
             </header>
 
-            {/* 날짜 구분 */}
-            <div className="flex items-center gap-3 px-6 py-4 shrink-0">
-                <div className="h-px flex-1 bg-slate-200/60 dark:bg-slate-800" />
-                <span className="text-[10px] font-black text-slate-400 bg-white/60 px-3 py-1 rounded-full border border-white/40">
-                    {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
-                </span>
-                <div className="h-px flex-1 bg-slate-200/60 dark:bg-slate-800" />
-            </div>
-
             {/* 메시지 영역 */}
-            <div className="flex-1 overflow-y-auto no-scrollbar px-4 pb-4 space-y-3">
+            <div className="flex-1 overflow-y-auto px-4 py-6 space-y-2 no-scrollbar">
                 {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-48 gap-2">
-                        <div className={`size-14 rounded-[1.75rem] ${otherUser.avatarColor} flex items-center justify-center overflow-hidden`}>
+                    <div className="flex flex-col items-center justify-center py-20 opacity-40">
+                        <div className={`size-20 rounded-3xl ${otherUser.avatarColor} flex items-center justify-center mb-4 shadow-xl`}>
                             {otherUser.avatarUrl ? (
                                 <img src={otherUser.avatarUrl} alt={otherUser.name} className="w-full h-full object-cover" />
                             ) : (
-                                <span className={`text-xl font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
+                                <span className={`text-2xl font-black ${otherUser.avatarTextColor}`}>{otherUser.initial}</span>
                             )}
                         </div>
                         <p className="text-sm font-black text-slate-800 dark:text-white mt-1">{otherUser.name}</p>
@@ -207,30 +188,30 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
                         </div>
                     </div>
                 )}
-                <div ref={bottomRef} className="h-1" />
+                <div ref={bottomRef} className="h-4 shrink-0" />
             </div>
 
             {/* 입력창 */}
-            <div className="shrink-0 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-t border-slate-100/60 dark:border-slate-800 px-4 py-3 pb-6 flex items-center gap-3">
-                <div className="flex-1 flex items-center bg-slate-100/80 dark:bg-slate-800 rounded-2xl px-4 py-3 gap-2 border border-slate-200/60 dark:border-slate-700">
+            <div className="shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-100/60 dark:border-slate-800 px-4 py-3 pb-[calc(14px+env(safe-area-inset-bottom))] flex items-center gap-3 z-30">
+                <div className="flex-1 flex items-center bg-slate-100/80 dark:bg-slate-800 rounded-2xl px-4 py-2.5 gap-2 border border-slate-200/60 dark:border-slate-700 group focus-within:border-primary/50 transition-all shadow-inner">
                     <input
                         ref={inputRef}
-                        className="flex-1 bg-transparent text-sm font-medium text-slate-800 dark:text-white outline-none placeholder:text-slate-400"
+                        className="flex-1 bg-transparent text-sm font-bold text-slate-800 dark:text-white outline-none placeholder:text-slate-400 py-0.5"
                         placeholder="메시지를 입력하세요..."
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
                     />
                     {input && (
-                        <button onClick={() => setInput('')} className="text-slate-400 hover:text-slate-600 transition-colors">
-                            <span className="material-symbols-outlined text-[16px]">cancel</span>
+                        <button onClick={() => setInput('')} className="text-slate-400 hover:text-red-400 transition-colors">
+                            <span className="material-symbols-outlined text-[18px]">cancel</span>
                         </button>
                     )}
                 </div>
                 <button
                     onClick={handleSend}
                     disabled={!input.trim()}
-                    className="size-11 rounded-2xl bg-primary flex items-center justify-center text-white active:scale-95 transition-all disabled:opacity-40 shadow-lg shadow-primary/20 shrink-0"
+                    className="size-10 rounded-2xl bg-primary flex items-center justify-center text-white active:scale-90 transition-all disabled:opacity-30 shadow-lg shadow-primary/25 shrink-0"
                 >
                     <span className="material-symbols-outlined text-[20px]">send</span>
                 </button>
