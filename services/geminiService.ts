@@ -12,11 +12,15 @@ export async function getAIResponse(
   manualContext: string = "",
   signal?: AbortSignal
 ) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  // Vite 환경 변수에서 키를 가져오되, 여러 경로를 통해 최대한 안전하게 확보
+  const env = (import.meta as any).env || {};
+  const apiKey = env.VITE_GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY가 설정되지 않았습니다.");
+    console.error("Critical: VITE_GEMINI_API_KEY is missing.");
+    throw new Error("AI 기능을 사용할 수 없습니다. 배포 서비스(Vercel/Firebase 등)의 Settings에서 VITE_GEMINI_API_KEY 환경 변수를 설정해 주세요.");
   }
+
 
   const adminSystemInstruction = `당신은 학원의 '매뉴얼 설계 전문가'입니다.
 관리자의 입력을 바탕으로 카테고리를 분류하고 상세 매뉴얼 아이템을 구성하세요.
