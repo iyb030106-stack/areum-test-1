@@ -29,8 +29,6 @@ const CATEGORY_ICONS = [
 const Home: React.FC<HomeProps> = ({ role }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
 
   const [allManuals, setAllManuals] = useState<ManualItem[]>([]);
   const [categories, setCategories] = useState<ManualCategory[]>([]);
@@ -44,6 +42,23 @@ const Home: React.FC<HomeProps> = ({ role }) => {
   // 알림 드로어 상태
   const [isNotiOpen, setIsNotiOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [lastReadNoti, setLastReadNoti] = useState<number>(() => {
+    const saved = localStorage.getItem('lastReadNotiTime');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  const hasUnread = useMemo(() => {
+    if (notifications.length === 0) return false;
+    const latestNotiTime = notifications[0].createdAt?.toDate().getTime() || 0;
+    return latestNotiTime > lastReadNoti;
+  }, [notifications, lastReadNoti]);
+
+  const handleOpenNoti = () => {
+    setIsNotiOpen(true);
+    const now = Date.now();
+    setLastReadNoti(now);
+    localStorage.setItem('lastReadNotiTime', now.toString());
+  };
 
   useEffect(() => {
     const unsubDocs = subscribeToAllManuals(setAllManuals);
@@ -58,46 +73,6 @@ const Home: React.FC<HomeProps> = ({ role }) => {
 
   const adminCategories = categories.filter(c => c.type === 'admin');
 
-  const initSpeechRecognition = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitRecognition;
-    if (!recognitionRef.current && SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'ko-KR';
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setSearchQuery(transcript);
-        setIsListening(false);
-      };
-      recognition.onerror = () => setIsListening(false);
-      recognition.onend = () => setIsListening(false);
-      recognitionRef.current = recognition;
-    }
-  };
-
-  useEffect(() => { initSpeechRecognition(); }, []);
-
-  const toggleVoiceSearch = async () => {
-    initSpeechRecognition();
-    if (!recognitionRef.current) {
-      alert('음성 인식을 지원하지 않는 환경입니다.');
-      return;
-    }
-    if (isListening) {
-      recognitionRef.current.stop();
-    } else {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop());
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch (err) {
-        alert('마이크 권한이 필요합니다.');
-        setIsListening(false);
-      }
-    }
-  };
 
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -147,24 +122,15 @@ const Home: React.FC<HomeProps> = ({ role }) => {
 
   return (
     <div className="pb-40 min-h-screen relative">
-      {isListening && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-xl flex flex-col items-center justify-center animate-fade-in text-white">
-          <div className="pulse-animation flex items-center justify-center h-28 w-28 bg-white rounded-full shadow-2xl mb-10">
-            <span className="material-symbols-outlined text-slate-900 text-5xl fill-1">mic</span>
-          </div>
-          <h3 className="text-2xl font-black tracking-tight">말씀해 주세요</h3>
-          <button onClick={() => setIsListening(false)} className="mt-16 bg-white/10 px-10 py-4 rounded-full border border-white/20 font-black text-sm active:scale-95 transition-all">취소</button>
-        </div>
-      )}
 
       <header className="px-6 pt-14 pb-2 flex items-center justify-between relative z-10">
         <h1 className="text-slate-800 dark:text-white text-xl font-black tracking-[0.15em] uppercase">FLOWY</h1>
         <button
-          onClick={() => setIsNotiOpen(true)}
+          onClick={handleOpenNoti}
           className="size-10 rounded-full bg-white/45 backdrop-blur-md flex items-center justify-center shadow-sm border border-white/40 hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-all active:scale-90 relative"
         >
           <span className="material-symbols-outlined text-xl">notifications</span>
-          {notifications.length > 0 && (
+          {hasUnread && (
             <span className="absolute top-2 right-2.5 size-2 bg-red-500 rounded-full border border-white"></span>
           )}
         </button>
@@ -182,9 +148,6 @@ const Home: React.FC<HomeProps> = ({ role }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <button onClick={toggleVoiceSearch} className="mr-3 p-3 rounded-2xl text-primary hover:bg-primary/5 transition-colors">
-              <span className="material-symbols-outlined text-2xl">mic</span>
-            </button>
           </div>
         </div>
 

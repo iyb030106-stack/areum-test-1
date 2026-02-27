@@ -22,6 +22,7 @@ export interface Announcement {
     isImportant: boolean;
     authorId: string;
     authorName: string;
+    authorPosition: string; // 직책
     authorInitial: string;
     createdAt: Timestamp | null;
     updatedAt: Timestamp | null;

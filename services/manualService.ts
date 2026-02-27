@@ -144,11 +144,16 @@ export const subscribeToMyManuals = (
     });
 };
 
-/** 매뉴얼 단건 조회 */
 export const getManualItem = async (id: string): Promise<ManualItem | null> => {
-    const snap = await getDoc(doc(db, 'manualItems', id));
-    if (!snap.exists()) return null;
-    return { id: snap.id, ...snap.data() } as ManualItem;
+    if (!id || typeof id !== 'string') return null;
+    try {
+        const snap = await getDoc(doc(db, 'manualItems', id));
+        if (!snap.exists()) return null;
+        return { id: snap.id, ...snap.data() } as ManualItem;
+    } catch (err) {
+        console.error("Error fetching manual item:", err);
+        return null;
+    }
 };
 
 /** 새 매뉴얼 생성 */
@@ -219,10 +224,15 @@ export const toggleScrapManual = async (uid: string, manualId: string): Promise<
     }
 };
 
-/** 특정 사용자의 스크랩 상태 확인 */
 export const checkIsScrapped = async (uid: string, manualId: string): Promise<boolean> => {
-    const snap = await getDoc(doc(db, 'users', uid, 'scraps', manualId));
-    return snap.exists();
+    if (!uid || !manualId) return false;
+    try {
+        const snap = await getDoc(doc(db, 'users', uid, 'scraps', manualId));
+        return snap.exists();
+    } catch (err) {
+        console.error("Error checking scrap status:", err);
+        return false;
+    }
 };
 
 /** 사용자의 스크랩한 매뉴얼 목록 실시간 구독 */

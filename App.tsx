@@ -109,7 +109,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home role={role} />} />
           <Route path="/subject-manuals" element={<SubjectManuals role={role} />} />
-          <Route path="/ai" element={<AIGuide />} />
+          <Route path="/ai" element={<AIGuide role={role} />} />
           <Route path="/announcements" element={<Announcements role={role} />} />
           <Route path="/announcements/:id" element={<AnnouncementDetail role={role} />} />
           <Route path="/announcements/new" element={<AnnouncementEdit />} />

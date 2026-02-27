@@ -1,41 +1,94 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { UserRole } from "../types";
 
-// Fetches a response from the AI assistant with given prompt and conversation history
-export async function getAIResponse(prompt: string, history: { role: string; content: string }[]) {
-  // Always initialize with process.env.API_KEY inside the function as per coding guidelines
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const model = 'gemini-3-flash-preview';
+/**
+ * Gemini API를 직접 호출하여 안정성을 높인 버전입니다.
+ * 가독성을 위해 AI에게 마크다운 기호를 남발하지 않도록 지시를 강화했습니다.
+ */
+export async function getAIResponse(
+  prompt: string,
+  history: { role: string; content: string }[],
+  role: UserRole = 'staff',
+  manualContext: string = ""
+) {
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.API_KEY || process.env.GEMINI_API_KEY;
 
-  // Format the history for the generateContent API
-  const contents = history.map(msg => ({
-    role: msg.role === 'model' ? 'model' : 'user',
-    parts: [{ text: msg.content }]
-  }));
-  
-  // Add current user prompt to the sequence
-  contents.push({
-    role: 'user',
-    parts: [{ text: prompt }]
-  });
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY가 설정되지 않았습니다.");
+  }
 
-  // Call generateContent with model name, structured contents, and system instructions
-  const response = await ai.models.generateContent({
-    model,
-    contents,
-    config: {
-      systemInstruction: `당신은 학원 및 교육 시설 관리 시스템의 AI 어시스턴트입니다. 
-      당신은 직원들이 다음 업무를 수행하는 것을 돕습니다:
-      1. 학부모 상담 및 응대 가이드 제공
-      2. 수강료 환불 규정 및 행정 절차 안내
-      3. 강의실 기기(프로젝터, PC) 문제 해결
-      4. 학생 출결 및 생활 지도 관련 조언
-      5. 교대 근무 인수인계 메모 작성
-      모든 답변은 한국어로 제공하며, 친절하고 교육 전문가다운 전문성을 갖춘 형태로 작성하세요. 
-      단계별 설명에는 글머리 기호를 사용하고, 필요시 법적 규정(교육법 등)에 근거한 안내를 하세요.`,
-    },
-  });
+  const adminSystemInstruction = `당신은 학원의 '매뉴얼 설계 전문가'입니다. 
+관리자가 주는 정보를 체계적으로 정리하여 시스템에 등록 가능한 데이터로 변환하세요.
 
-  // Return text directly from the response object
-  return response.text;
+[구조화 지침]
+1. 과목별 수업 방식(예: 영어는 ~, 국어는 ~)이 섞여 있다면, 이를 하나의 커다란 덩어리가 아니라 '국어 수업', '영어 수업'처럼 과목별로 분리된 개별 항목(items)으로 나누어 생성하세요.
+2. 각 항목의 'title'은 해당 과목명이나 핵심 업무 명칭으로 정하세요.
+3. 'category'의 'name'은 전체를 아우르는 주제(예: 과목별 수업 운영 지침)로 정하세요.
+
+[답변 스타일 규칙]
+1. ###, ## 같은 마크다운 헤더 기호를 절대 사용하지 마세요. 대신 이모지(📋, ✅, 💡)를 제목 앞에 활용하세요.
+2. 문장은 '~하세요', '~해요' 처럼 친절하고 간결한 구어체를 사용하세요.
+3. 분석 결과(JSON)는 반드시 답변 맨 끝에 '별도의 코드 블록'으로만 넣으세요.
+
+분석 결과 JSON 형식:
+\`\`\`json
+{
+  "requestType": "STRUCTURE_MANUAL",
+  "category": { "name": "카테고리명", "type": "admin|subject", "icon": "folder" },
+  "items": [
+    { "title": "제목", "description": "설명", "steps": ["단계1", "단계2"], "icon": "fact_check" }
+  ]
+}
+\`\`\``;
+
+  const staffSystemInstruction = `당신은 학원 업무 지식 뱅크입니다. 
+등록된 매뉴얼을 바탕으로 질문에 답변하세요.
+
+[답변 스타일 규칙]
+1. 마크다운 기호를 남발하지 마세요. (###, ** 등 사용 자제)
+2. 가장 중요한 키워드에만 아주 가끔 **강조**를 사용하세요. 
+3. 번호를 매길 때는 '1. ', '2. ' 처럼 명확히 구분하세요.
+4. 모바일 화면에서 한눈에 들어오도록 문장을 짧게 끊어서 작성하세요.
+
+[매뉴얼 데이터]
+${manualContext || "현재 매뉴얼 정보가 없습니다."}`;
+
+  const systemInstruction = role === 'admin' ? adminSystemInstruction : staffSystemInstruction;
+  const modelName = 'gemini-flash-latest';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+  const requestBody = {
+    contents: [
+      ...history.map(msg => ({
+        role: msg.role === 'model' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
+      })),
+      {
+        role: 'user',
+        parts: [{ text: prompt }]
+      }
+    ],
+    systemInstruction: {
+      parts: [{ text: systemInstruction }]
+    }
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`AI 호출 실패: ${errorData.error?.message}`);
+    }
+
+    const result = await response.json();
+    return result.candidates[0].content.parts[0].text;
+  } catch (err: any) {
+    console.error("getAIResponse failure:", err);
+    throw err;
+  }
 }

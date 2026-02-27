@@ -16,12 +16,17 @@ const ManualCategory: React.FC<ManualCategoryProps> = ({ role }) => {
   const category = categories.find((c) => c.id === catId);
 
   useEffect(() => {
-    if (!catId) return;
-    const unsubDocs = subscribeToManuals(catId, setItems);
-    const unsubCats = subscribeToCategories(setCategories);
+    let unsubDocs: (() => void) | undefined;
+    let unsubCats: (() => void) | undefined;
+
+    if (catId) {
+      unsubDocs = subscribeToManuals(catId, setItems);
+      unsubCats = subscribeToCategories(setCategories);
+    }
+
     return () => {
-      unsubDocs();
-      unsubCats();
+      if (unsubDocs) unsubDocs();
+      if (unsubCats) unsubCats();
     };
   }, [catId]);
 

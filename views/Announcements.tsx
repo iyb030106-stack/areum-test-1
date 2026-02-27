@@ -57,9 +57,9 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
             {role === 'admin' && (
               <button
                 onClick={() => navigate('/announcements/new')}
-                className="size-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                className="size-5 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/10 active:scale-95 transition-all"
               >
-                <span className="material-symbols-outlined">add</span>
+                <span className="material-symbols-outlined text-[12px]">add</span>
               </button>
             )}
           </div>
@@ -119,51 +119,44 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
             <div
               key={update.id}
               onClick={() => navigate(`/announcements/${update.id}`)}
-              className={`group relative overflow-hidden p-6 bg-white/55 backdrop-blur-md dark:bg-slate-800/55 rounded-[2.5rem] border transition-all shadow-sm active:scale-[0.98] cursor-pointer hover:border-primary/20 ${update.isImportant
+              className={`group relative overflow-hidden p-3.5 bg-white/55 backdrop-blur-md dark:bg-slate-800/55 rounded-2xl border transition-all shadow-sm active:scale-[0.98] cursor-pointer hover:border-primary/20 ${update.isImportant
                 ? 'border-l-4 border-l-primary/30 border-white/40 dark:border-slate-700'
                 : 'border-white/40 dark:border-slate-700'
                 }`}
             >
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-1.5 mb-1.5">
                 <span
-                  className={`text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-widest ${update.category === '필독'
+                  className={`text-[8.5px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest ${update.category === '필독'
                     ? 'bg-red-100/50 text-red-600'
-                    : update.category === '매뉴얼'
-                      ? 'bg-blue-100/50 text-blue-600'
-                      : update.category === '일정'
-                        ? 'bg-emerald-100/50 text-emerald-600'
-                        : 'bg-slate-100/50 text-slate-600'
+                    : 'bg-slate-100/50 text-slate-600'
                     }`}
                 >
                   {update.category}
                 </span>
-                <span className="size-1 bg-slate-200 rounded-full"></span>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <span className="text-[8.5px] font-black text-slate-400 uppercase tracking-widest">
                   {formatTimeAgo(update.createdAt)}
                 </span>
 
-                {/* 관리자 삭제 버튼 */}
                 {role === 'admin' && (
                   <button
                     onClick={(e) => handleDelete(update.id, e)}
                     className="ml-auto text-slate-300 hover:text-red-400 transition-colors p-1"
-                    title="삭제"
                   >
-                    <span className="material-symbols-outlined text-[16px]">delete_outline</span>
+                    <span className="material-symbols-outlined text-[13px]">delete_outline</span>
                   </button>
                 )}
               </div>
 
-              <h3 className="text-lg font-black mb-2 text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors">
+              <h3 className="text-[13px] font-black mb-0 text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors">
                 {update.title}
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed line-clamp-2">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold leading-tight line-clamp-1 opacity-80">
                 {update.description}
               </p>
 
-              <div className="mt-4 pt-4 border-t border-white/20 dark:border-slate-700/50 flex justify-between items-center">
-                <span className="text-[11px] font-black text-slate-300">{update.authorName}</span>
-                <span className="material-symbols-outlined text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all">
+              <div className="mt-2.5 pt-2.5 border-t border-white/20 dark:border-slate-700/50 flex justify-between items-center">
+                <span className="text-[9px] font-black text-slate-400">{update.authorPosition || '관리자'}</span>
+                <span className="material-symbols-outlined text-slate-300 text-[14px] group-hover:text-primary group-hover:translate-x-1 transition-all">
                   arrow_forward
                 </span>
               </div>

@@ -41,6 +41,11 @@ const AnnouncementEdit: React.FC = () => {
 
     setLoading(true);
     try {
+      // 작성자 직책 정보를 가져오기 위해 유저 서비스 임포트 및 호출
+      const { getUserData } = await import('../services/authService');
+      const userData = await getUserData(user.uid);
+      const position = userData?.position || '관리자';
+
       if (isEdit && id) {
         await updateAnnouncement(id, { title, description, category, isImportant });
       } else {
@@ -51,6 +56,7 @@ const AnnouncementEdit: React.FC = () => {
           isImportant,
           authorId: user.uid,
           authorName: user.displayName || '관리자',
+          authorPosition: position,
           authorInitial: (user.displayName || '관')[0],
         });
       }
