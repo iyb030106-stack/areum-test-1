@@ -12,12 +12,13 @@ import {
     getDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { createNotification } from './notificationService';
 
 export interface Announcement {
     id: string;
     title: string;
     description: string;
-    category: '필독' | '일반' | '매뉴얼' | '일정';
+    category: '필독' | '일반';
     isImportant: boolean;
     authorId: string;
     authorName: string;
@@ -53,6 +54,16 @@ export const createAnnouncement = async (
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     });
+
+    // 알림 생성
+    await createNotification({
+        type: 'announcement',
+        action: 'created',
+        title: data.title,
+        targetId: ref.id,
+        authorName: data.authorName,
+    });
+
     return ref.id;
 };
 
@@ -65,6 +76,17 @@ export const updateAnnouncement = async (
         ...data,
         updatedAt: serverTimestamp(),
     });
+
+    // 알림 생성 (수정 시)
+    if (data.title) {
+        await createNotification({
+            type: 'announcement',
+            action: 'updated',
+            title: data.title,
+            targetId: id,
+            authorName: '관리자', // 수정자는 일단 관리자로 표기
+        });
+    }
 };
 
 /** 공지사항 삭제 */

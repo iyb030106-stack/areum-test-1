@@ -8,7 +8,7 @@ import { FlowyIcon } from '../components/Layout';
 const AIGuide: React.FC = () => {
   const location = useLocation();
   const initialPrompt = (location.state as any)?.prompt || '';
-  
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'model',
@@ -131,11 +131,10 @@ const AIGuide: React.FC = () => {
               </div>
             )}
             <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end max-w-[85%]' : 'items-start max-w-[85%]'}`}>
-              <div className={`rounded-[1.75rem] px-6 py-4 shadow-sm text-sm font-bold leading-relaxed tracking-tight ${
-                msg.role === 'user' 
-                  ? 'rounded-tr-none bg-primary text-white shadow-xl shadow-primary/10' 
+              <div className={`rounded-[1.75rem] px-6 py-4 shadow-sm text-sm font-bold leading-relaxed tracking-tight ${msg.role === 'user'
+                  ? 'rounded-tr-none bg-primary text-white shadow-xl shadow-primary/10'
                   : 'rounded-tl-none bg-white/70 backdrop-blur-md dark:bg-slate-800/70 text-slate-800 dark:text-white border border-white/40 dark:border-slate-700'
-              }`}>
+                }`}>
                 {msg.content}
               </div>
               <span className="text-[10px] font-black text-slate-400 px-2 opacity-50 uppercase tracking-tighter">{msg.timestamp}</span>
@@ -144,12 +143,12 @@ const AIGuide: React.FC = () => {
         ))}
         {isLoading && (
           <div className="flex gap-3 items-center px-2">
-             <div className="flex gap-1">
-                <div className="w-2 h-2 bg-primary/30 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce delay-75"></div>
-                <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce delay-150"></div>
-             </div>
-             <span className="text-[11px] text-primary/40 font-black italic uppercase tracking-widest">Flowy is Thinking...</span>
+            <div className="flex gap-1">
+              <div className="w-2 h-2 bg-primary/30 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce delay-75"></div>
+              <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce delay-150"></div>
+            </div>
+            <span className="text-[11px] text-primary/40 font-black italic uppercase tracking-widest">Flowy is Thinking...</span>
           </div>
         )}
       </main>
@@ -165,9 +164,9 @@ const AIGuide: React.FC = () => {
             <span className="material-symbols-outlined text-2xl">mic</span>
           </button>
           <div className="flex-1 relative">
-            <input 
-              className="w-full rounded-[1.5rem] border-none bg-white/55 dark:bg-slate-800/55 px-6 py-4.5 text-sm font-bold focus:ring-4 focus:ring-primary/10 dark:text-white placeholder:text-slate-300 border border-white/40" 
-              placeholder="무엇이 궁금하세요?" 
+            <input
+              className="w-full rounded-[1.5rem] border-none bg-white/55 dark:bg-slate-800/55 px-6 py-4.5 text-sm font-bold focus:ring-4 focus:ring-primary/10 dark:text-white placeholder:text-slate-300 border border-white/40"
+              placeholder="무엇이 궁금하세요?"
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}

@@ -81,12 +81,12 @@ const AnnouncementDetail: React.FC<AnnouncementDetailProps> = ({ role }) => {
           <div className="flex items-center gap-2 mb-4">
             <span
               className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest ${announcement.category === '필독'
-                  ? 'bg-red-100/50 text-red-600'
-                  : announcement.category === '매뉴얼'
-                    ? 'bg-blue-100/50 text-blue-600'
-                    : announcement.category === '일정'
-                      ? 'bg-emerald-100/50 text-emerald-600'
-                      : 'bg-slate-100/50 text-slate-600'
+                ? 'bg-red-100/50 text-red-600'
+                : announcement.category === '매뉴얼'
+                  ? 'bg-blue-100/50 text-blue-600'
+                  : announcement.category === '일정'
+                    ? 'bg-emerald-100/50 text-emerald-600'
+                    : 'bg-slate-100/50 text-slate-600'
                 }`}
             >
               {announcement.category}

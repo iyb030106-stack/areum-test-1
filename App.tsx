@@ -25,6 +25,8 @@ import ChatRoom from './views/ChatRoom';
 import FAQList from './views/FAQList';
 import FAQEdit from './views/FAQEdit';
 import { UserRole } from './types';
+import { MANUAL_CATEGORIES } from './constants';
+import { initializeCategoriesIfNeeded } from './services/manualService';
 
 const LoadingScreen = () => (
   <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
@@ -45,6 +47,8 @@ const App: React.FC = () => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     }
+    // 기본 카테고리 초기화
+    initializeCategoriesIfNeeded(MANUAL_CATEGORIES);
   }, []);
 
   useEffect(() => {
@@ -104,7 +108,7 @@ const App: React.FC = () => {
       <Layout role={role} onLogout={handleLogout}>
         <Routes>
           <Route path="/" element={<Home role={role} />} />
-          <Route path="/subject-manuals" element={<SubjectManuals />} />
+          <Route path="/subject-manuals" element={<SubjectManuals role={role} />} />
           <Route path="/ai" element={<AIGuide />} />
           <Route path="/announcements" element={<Announcements role={role} />} />
           <Route path="/announcements/:id" element={<AnnouncementDetail role={role} />} />

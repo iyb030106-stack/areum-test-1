@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MANUAL_CATEGORIES } from '../constants';
 import { UserRole } from '../types';
-import { subscribeToManuals, ManualItem } from '../services/manualService';
+import { subscribeToManuals, ManualItem, subscribeToCategories, ManualCategory as IManualCategory } from '../services/manualService';
 
 interface ManualCategoryProps {
   role?: UserRole;
@@ -12,13 +11,18 @@ interface ManualCategoryProps {
 const ManualCategory: React.FC<ManualCategoryProps> = ({ role }) => {
   const { catId } = useParams<{ catId: string }>();
   const navigate = useNavigate();
-  const category = MANUAL_CATEGORIES.find((c) => c.id === catId);
   const [items, setItems] = useState<ManualItem[]>([]);
+  const [categories, setCategories] = useState<IManualCategory[]>([]);
+  const category = categories.find((c) => c.id === catId);
 
   useEffect(() => {
     if (!catId) return;
-    const unsubscribe = subscribeToManuals(catId, setItems);
-    return unsubscribe;
+    const unsubDocs = subscribeToManuals(catId, setItems);
+    const unsubCats = subscribeToCategories(setCategories);
+    return () => {
+      unsubDocs();
+      unsubCats();
+    };
   }, [catId]);
 
   // 소분류별 그룹핑
@@ -61,7 +65,7 @@ const ManualCategory: React.FC<ManualCategoryProps> = ({ role }) => {
                 <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>
               </div>
               <div className="space-y-3">
-                {subItems.map((item) => (
+                {(subItems as ManualItem[]).map((item) => (
                   <div
                     key={item.id}
                     onClick={() => navigate(`/manuals/${catId}/${item.id}`)}

@@ -15,7 +15,7 @@ const AnnouncementEdit: React.FC = () => {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<'필독' | '일반' | '매뉴얼' | '일정'>('일반');
+  const [category, setCategory] = useState<'필독' | '일반'>('일반');
   const [isImportant, setIsImportant] = useState(false);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEdit);
@@ -99,7 +99,7 @@ const AnnouncementEdit: React.FC = () => {
           <div className="space-y-1.5">
             <label className="text-[11px] font-bold text-slate-500 ml-1">카테고리</label>
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-              {(['필독', '일반', '매뉴얼', '일정'] as const).map((cat) => (
+              {(['필독', '일반'] as const).map((cat) => (
                 <button
                   key={cat}
                   type="button"

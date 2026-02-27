@@ -11,7 +11,7 @@ interface AnnouncementsProps {
 const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
   const navigate = useNavigate();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [activeFilter, setActiveFilter] = useState<'전체' | '필독' | '일반' | '매뉴얼' | '일정'>('전체');
+  const [activeFilter, setActiveFilter] = useState<'전체' | '필독' | '일반'>('전체');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
     }
   };
 
-  const categories = ['전체', '필독', '일반', '매뉴얼', '일정'];
+  const categories = ['전체', '필독'];
 
   return (
     <div className="pb-32 min-h-screen relative">

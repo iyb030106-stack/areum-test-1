@@ -12,8 +12,81 @@ import {
     Timestamp,
     getDoc,
     setDoc,
+    writeBatch,
+    getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { createNotification } from './notificationService';
+
+export interface ManualCategory {
+    id: string;
+    name: string;
+    icon: string;
+    colorClass: string;
+    bgClass: string;
+    type: 'admin' | 'subject';
+    order: number;
+    createdAt?: Timestamp | null;
+}
+
+/** 카테고리 초기화 (필요시) */
+export const initializeCategoriesIfNeeded = async (initialCategories: any[]): Promise<void> => {
+    const snap = await getDocs(collection(db, 'manualCategories'));
+    if (snap.empty) {
+        const batch = writeBatch(db);
+        initialCategories.forEach((cat, index) => {
+            const { id, ...data } = cat;
+            const ref = doc(collection(db, 'manualCategories'));
+            batch.set(ref, {
+                ...data,
+                order: index,
+                createdAt: serverTimestamp(),
+            });
+        });
+        await batch.commit();
+    }
+};
+
+/** 카테고리 실시간 구독 */
+export const subscribeToCategories = (
+    callback: (categories: ManualCategory[]) => void,
+): (() => void) => {
+    const q = query(collection(db, 'manualCategories'), orderBy('order', 'asc'));
+    return onSnapshot(q, (snapshot) => {
+        callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ManualCategory[]);
+    });
+};
+
+/** 카테고리 생성 */
+export const createManualCategory = async (
+    data: Omit<ManualCategory, 'id' | 'createdAt'>,
+): Promise<string> => {
+    const ref = await addDoc(collection(db, 'manualCategories'), {
+        ...data,
+        createdAt: serverTimestamp(),
+    });
+    return ref.id;
+};
+
+/** 카테고리 수정 */
+export const updateManualCategory = async (
+    id: string,
+    data: Partial<Omit<ManualCategory, 'id' | 'createdAt'>>,
+): Promise<void> => {
+    await updateDoc(doc(db, 'manualCategories', id), data);
+};
+
+/** 카테고리 삭제 (해당 카테고리의 매뉴얼 아이템도 함께 삭제) */
+export const deleteManualCategory = async (id: string): Promise<void> => {
+    // 해당 카테고리의 매뉴얼 아이템 삭제
+    const itemsSnap = await getDocs(
+        query(collection(db, 'manualItems'), where('categoryId', '==', id))
+    );
+    const batch = writeBatch(db);
+    itemsSnap.docs.forEach((d) => batch.delete(d.ref));
+    batch.delete(doc(db, 'manualCategories', id));
+    await batch.commit();
+};
 
 export interface ManualItem {
     id: string;
@@ -87,6 +160,17 @@ export const createManualItem = async (
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     });
+
+    // 알림 생성
+    await createNotification({
+        type: 'manual',
+        action: 'created',
+        title: data.title,
+        targetId: ref.id,
+        categoryId: data.categoryId,
+        authorName: data.lastEditedByName || '관리자',
+    });
+
     return ref.id;
 };
 
@@ -99,6 +183,18 @@ export const updateManualItem = async (
         ...data,
         updatedAt: serverTimestamp(),
     });
+
+    // 알림 생성 (수정 시)
+    if (data.title) {
+        await createNotification({
+            type: 'manual',
+            action: 'updated',
+            title: data.title,
+            targetId: id,
+            categoryId: (data as any).categoryId, // 혹은 기존 데이타에서 가져와야할 수도 있지만 일단 이렇게
+            authorName: data.lastEditedByName || '관리자',
+        });
+    }
 };
 
 /** 매뉴얼 삭제 */
