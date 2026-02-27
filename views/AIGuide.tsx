@@ -1,17 +1,15 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { getAIResponse } from '../services/geminiService';
-import { ChatMessage, UserRole } from '../types';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ChatMessage, UserRole, ManualCategory, ManualItem } from '../types';
 import { FlowyIcon } from '../components/Layout';
 import {
   subscribeToAllManuals,
   subscribeToCategories,
   createManualCategory,
   createManualItem,
-  ManualCategory,
-  ManualItem
 } from '../services/manualService';
+import { useChat } from '../contexts/ChatContext';
 
 interface AIGuideProps {
   role: UserRole;
@@ -19,39 +17,15 @@ interface AIGuideProps {
 
 const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const initialPrompt = (location.state as any)?.prompt || '';
-
-  // 로컬 스토리지에서 이전 대화 기록 불러오기 (초기값 설정)
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const saved = localStorage.getItem(`chat_history_${role}`);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return [];
-      }
-    }
-    return [
-      {
-        role: 'model',
-        content: role === 'admin'
-          ? '안녕하세요 원장님! 정리되지 않은 매뉴얼 내용을 적어주시면 제가 체계적으로 정리해서 시스템에 등록해 드릴게요.'
-          : '안녕하세요! 매뉴얼에 대해 궁금한 점이 있으신가요? 제가 대신 찾아드릴게요.',
-        timestamp: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-      },
-    ];
-  });
-
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<ManualCategory[]>([]);
   const [manuals, setManuals] = useState<ManualItem[]>([]);
+  const [isApplying, setIsApplying] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // 대화 내용이 바뀔 때마다 로컬 스토리지에 자동 저장
-  useEffect(() => {
-    localStorage.setItem(`chat_history_${role}`, JSON.stringify(messages));
-  }, [messages, role]);
+  const { messagesMap, isLoading, sendMessage, stopMessage, resetChat } = useChat();
+  const messages = messagesMap[role] || [];
 
   useEffect(() => {
     const unsubCats = subscribeToCategories(setCategories);
@@ -69,7 +43,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
   }, [messages, isLoading]);
 
   useEffect(() => {
-    if (initialPrompt && messages.length === 1) {
+    if (initialPrompt && messages.length <= 1) {
       handleSend(initialPrompt);
     }
   }, [initialPrompt]);
@@ -90,79 +64,106 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
   const handleSend = async (customInput?: string) => {
     const textToSend = customInput || input;
     if (!textToSend.trim() || isLoading) return;
-    const userMessage: ChatMessage = {
-      role: 'user',
-      content: textToSend,
-      timestamp: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-    };
-    setMessages((prev) => [...prev, userMessage]);
+
     setInput('');
-    setIsLoading(true);
+    const context = role === 'staff'
+      ? getManualContext()
+      : `현재 등록된 카테고리 목록: ${categories.map(c => `${c.name}(${c.type})`).join(', ')}`;
 
-    try {
-      const history = messages.slice(-5).map(m => ({ role: m.role, content: m.content }));
-      const context = role === 'staff' ? getManualContext() : "";
-      const response = await getAIResponse(textToSend, history, role, context);
+    await sendMessage(textToSend, role, context);
+  };
 
-      setMessages((prev) => [...prev, {
-        role: 'model',
-        content: response || "답변을 생성할 수 없습니다.",
-        timestamp: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-      }]);
-    } catch (err: any) {
-      setMessages((prev) => [...prev, {
-        role: 'model',
-        content: err.message || "네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-        timestamp: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-      }]);
-    } finally {
-      setIsLoading(false);
+  // 대화 초기화 함수 
+  const handleReset = () => {
+    if (window.confirm('지금까지의 대화 내역을 모두 지우고 새로 시작할까요?')) {
+      resetChat(role);
     }
   };
 
   // AI 제안 내용을 실제 시스템에 적용
   const handleApplyStructure = async (jsonStr: string) => {
+    if (isApplying) return;
     try {
+      setIsApplying(true);
       const data = JSON.parse(jsonStr);
-      if (data.requestType !== 'STRUCTURE_MANUAL') return;
-
-      setIsLoading(true);
-
-      // 1. 카테고리 생성 (기존에 있나 확인은 일단 생략하고 새로 생성)
-      const catId = await createManualCategory({
-        ...data.category,
-        order: categories.length,
-        colorClass: 'text-primary/80',
-        bgClass: 'bg-primary/5'
-      });
-
-      // 2. 항목들 생성
-      for (const item of data.items) {
-        await createManualItem({
-          ...item,
-          categoryId: catId,
-          subCategory: 'AI 추천 섹션',
-          lastEditedBy: 'AI_ASSISTANT',
-          lastEditedByName: 'Flowy AI'
-        });
+      if (data.requestType !== 'STRUCTURE_MANUAL') {
+        alert('올바른 매뉴얼 데이터 형식이 아닙니다.');
+        return;
       }
 
-      setMessages(prev => [...prev, {
-        role: 'model',
-        content: `✅ 성공적으로 '${data.category.name}' 카테고리와 ${data.items.length}개의 매뉴얼 항목을 등록했습니다! 이제 메뉴에서 확인하실 수 있습니다.`,
-        timestamp: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-      }]);
-    } catch (err) {
-      alert('적용 중 오류가 발생했습니다.');
+      if (data.groups && Array.isArray(data.groups)) {
+        for (let i = 0; i < data.groups.length; i++) {
+          const group = data.groups[i];
+
+          // 중복 카테고리 체크
+          const existingCat = categories.find(
+            c => c.name === group.category.name && c.type === group.category.type
+          );
+
+          let catId;
+          if (existingCat) {
+            catId = existingCat.id;
+          } else {
+            catId = await createManualCategory({
+              ...group.category,
+              order: categories.length + i,
+              colorClass: group.category.type === 'admin' ? 'text-slate-500/80' : 'text-primary/80',
+              bgClass: group.category.type === 'admin' ? 'bg-slate-50/50' : 'bg-primary/5'
+            });
+          }
+
+          for (const item of group.items) {
+            await createManualItem({
+              ...item,
+              categoryId: catId,
+              subCategory: group.category.name,
+              timeEstimate: item.timeEstimate || '10분',
+              level: item.level || 'Beginner',
+              lastEditedBy: 'AI_ASSISTANT',
+              lastEditedByName: 'Flowy AI'
+            });
+          }
+        }
+        alert(`✅ 매뉴얼이 시스템에 성공적으로 반영되었습니다!`);
+      } else {
+        alert('시스템에 적용할 수 있는 데이터 구조를 찾을 수 없습니다.');
+      }
+    } catch (err: any) {
+      console.error('Apply Structure Error:', err);
+      alert('매뉴얼 적용 중 오류가 발생했습니다: ' + err.message);
     } finally {
-      setIsLoading(false);
+      setIsApplying(false);
     }
   };
 
-  // 메시지에서 JSON 코드 블록 추출
+
+  // 메시지에서 JSON 코드 블록 추출 (더 유연하게)
   const extractJson = (content: string) => {
-    const match = content.match(/```json\n([\s\S]*?)\n```/);
-    return match ? match[1] : null;
+    // 1. ```json 블록 찾기
+    const jsonBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonBlockMatch) return jsonBlockMatch[1].trim();
+
+    // 2. 그냥 ``` 블록 찾기
+    const genericBlockMatch = content.match(/```\s*([\s\S]*?)\s*```/);
+    if (genericBlockMatch) {
+      const text = genericBlockMatch[1].trim();
+      if (text.startsWith('{') && text.endsWith('}')) return text;
+    }
+
+    // 3. 문장 속에 포함된 { } 찾기 (가장 큰 범위)
+    const firstBrace = content.indexOf('{');
+    const lastBrace = content.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      const potentialJson = content.substring(firstBrace, lastBrace + 1);
+      try {
+        JSON.parse(potentialJson);
+        return potentialJson;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    return null;
   };
 
   return (
@@ -171,7 +172,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
         <div className={`flex h-12 w-12 items-center justify-center rounded-[1.25rem] bg-white shadow-inner ${role === 'admin' ? 'text-emerald-500' : 'text-primary'}`}>
           <FlowyIcon className="size-7" />
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col flex-1">
           <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
             {role === 'admin' ? '관리자 AI 비서' : 'Flowy AI 가이드'}
           </h2>
@@ -179,6 +180,13 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
             {role === 'admin' ? 'Manual Architect Mode' : 'Knowledge Bank Mode'}
           </span>
         </div>
+        <button
+          onClick={handleReset}
+          className="size-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-90"
+          title="대화 초기화"
+        >
+          <span className="material-symbols-outlined">restart_alt</span>
+        </button>
       </header>
 
       <main ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-16 relative z-10">
@@ -211,9 +219,11 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
                       </p>
                       <button
                         onClick={() => handleApplyStructure(jsonContent)}
-                        className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[12px] font-black transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
+                        disabled={isApplying}
+                        className={`w-full py-3 ${isApplying ? 'bg-slate-400' : 'bg-emerald-500 hover:bg-emerald-600'} text-white rounded-xl text-[12px] font-black transition-all active:scale-95 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2`}
                       >
-                        시스템에 즉시 적용하기
+                        {isApplying && <div className="size-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
+                        {isApplying ? '시스템 적용 중...' : '시스템에 즉시 적용하기'}
                       </button>
                     </div>
                   )}
@@ -247,9 +257,23 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             />
           </div>
-          <button onClick={() => handleSend()} disabled={isLoading || !input.trim()} className={`flex h-14 w-14 items-center justify-center rounded-[1.5rem] text-white disabled:opacity-50 active:scale-95 shadow-2xl shrink-0 ${role === 'admin' ? 'bg-emerald-500 shadow-emerald-500/30' : 'bg-primary shadow-primary/30'}`}>
-            <span className="material-symbols-outlined text-2xl">send</span>
-          </button>
+          {isLoading ? (
+            <button
+              onClick={stopMessage}
+              className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-red-500 text-white shadow-xl shadow-red-500/20 active:scale-95 shrink-0 transition-all"
+              title="중단하기"
+            >
+              <span className="material-symbols-outlined text-2xl animate-pulse">stop</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => handleSend()}
+              disabled={!input.trim()}
+              className={`flex h-14 w-14 items-center justify-center rounded-[1.5rem] text-white disabled:opacity-50 active:scale-95 shadow-2xl shrink-0 ${role === 'admin' ? 'bg-emerald-500 shadow-emerald-500/30' : 'bg-primary shadow-primary/30'}`}
+            >
+              <span className="material-symbols-outlined text-2xl">send</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -9,7 +9,8 @@ export async function getAIResponse(
   prompt: string,
   history: { role: string; content: string }[],
   role: UserRole = 'staff',
-  manualContext: string = ""
+  manualContext: string = "",
+  signal?: AbortSignal
 ) {
   const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.API_KEY || process.env.GEMINI_API_KEY;
 
@@ -17,26 +18,36 @@ export async function getAIResponse(
     throw new Error("GEMINI_API_KEY가 설정되지 않았습니다.");
   }
 
-  const adminSystemInstruction = `당신은 학원의 '매뉴얼 설계 전문가'입니다. 
-관리자가 주는 정보를 체계적으로 정리하여 시스템에 등록 가능한 데이터로 변환하세요.
+  const adminSystemInstruction = `당신은 학원의 '매뉴얼 설계 전문가'입니다.
+관리자의 입력을 바탕으로 카테고리를 분류하고 상세 매뉴얼 아이템을 구성하세요.
+
+[카테고리 중복 방지 지침]
+1. 아래 '현재 등록된 카테고리 목록'을 반드시 확인하세요.
+2. 입력 내용이 이미 존재하는 카테고리에 속한다면, 새로운 이름을 만들지 말고 반드시 목록에 있는 '정확한 이름'을 "name"에 사용하세요.
+3. 카테고리 이름은 최대한 단순한 명사형(예: '국어', '수학', '근무수칙')으로 결정하고, 뒤에 '수업', '지침', '매뉴얼' 같은 중복된 수식어를 붙이지 마세요.
 
 [구조화 지침]
-1. 과목별 수업 방식(예: 영어는 ~, 국어는 ~)이 섞여 있다면, 이를 하나의 커다란 덩어리가 아니라 '국어 수업', '영어 수업'처럼 과목별로 분리된 개별 항목(items)으로 나누어 생성하세요.
-2. 각 항목의 'title'은 해당 과목명이나 핵심 업무 명칭으로 정하세요.
-3. 'category'의 'name'은 전체를 아우르는 주제(예: 과목별 수업 운영 지침)로 정하세요.
+1. 과목 수업 방식은 'type': 'subject', 일반 운영 지침은 'type': 'admin'으로 분류하세요.
+2. 'groups' 배열을 사용하여 여러 카테고리를 한 번에 제안할 수 있습니다.
+
+[현재 등록된 카테고리 목록]
+${manualContext || "아직 등록된 카테고리가 없습니다."}
 
 [답변 스타일 규칙]
-1. ###, ## 같은 마크다운 헤더 기호를 절대 사용하지 마세요. 대신 이모지(📋, ✅, 💡)를 제목 앞에 활용하세요.
-2. 문장은 '~하세요', '~해요' 처럼 친절하고 간결한 구어체를 사용하세요.
-3. 분석 결과(JSON)는 반드시 답변 맨 끝에 '별도의 코드 블록'으로만 넣으세요.
+1. 마크다운 헤더(###)는 사용하지 말고 이모지를 활용해 친절하게 답변하세요.
+2. 분석 결과 JSON은 답변 맨 마지막 코드 블록으로 넣으세요.
 
 분석 결과 JSON 형식:
 \`\`\`json
 {
   "requestType": "STRUCTURE_MANUAL",
-  "category": { "name": "카테고리명", "type": "admin|subject", "icon": "folder" },
-  "items": [
-    { "title": "제목", "description": "설명", "steps": ["단계1", "단계2"], "icon": "fact_check" }
+  "groups": [
+    {
+      "category": { "name": "목록에 있는 이름 혹은 단순명사", "type": "admin/subject", "icon": "아이콘" },
+      "items": [
+        { "title": "제목", "description": "설명", "steps": ["단계1", "단계2"], "icon": "fact_check" }
+      ]
+    }
   ]
 }
 \`\`\``;
@@ -77,12 +88,20 @@ ${manualContext || "현재 매뉴얼 정보가 없습니다."}`;
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
+      signal
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(`AI 호출 실패: ${errorData.error?.message}`);
+      const rawMsg = errorData.error?.message || "";
+
+      // 사용자 친화적인 에러 메시지로 변환
+      if (rawMsg.includes("Quota exceeded") || rawMsg.includes("429")) {
+        throw new Error("AI가 현재 많은 요청을 처리하고 있어 잠시 기다려주세요.😊");
+      }
+
+      throw new Error(`AI 호출 실패: ${rawMsg}`);
     }
 
     const result = await response.json();

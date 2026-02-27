@@ -35,11 +35,12 @@ const LoadingScreen = () => (
   </div>
 );
 
+import { ChatProvider } from './contexts/ChatContext';
+
 const App: React.FC = () => {
+  // ... 생략 (기존 상태들 유지)
   const [currentUser, setCurrentUser] = useState<FirestoreUser | null>(null);
   const [loading, setLoading] = useState(true);
-  // 로그인 직후 loginUser()에서 이미 가져온 userData를 임시 보관
-  // → onAuthStateChanged가 Firestore를 중복 읽지 않도록 재사용
   const pendingUserDataRef = useRef<FirestoreUser | null>(null);
 
   useEffect(() => {
@@ -47,19 +48,15 @@ const App: React.FC = () => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     }
-    // 기본 카테고리 초기화
-    initializeCategoriesIfNeeded(MANUAL_CATEGORIES);
   }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // 로그인 직후라면 이미 캐시된 데이터를 사용 (Firestore 읽기 절약)
         if (pendingUserDataRef.current) {
           setCurrentUser(pendingUserDataRef.current);
           pendingUserDataRef.current = null;
         } else {
-          // 앱 새로고침 등 페이지 재진입 시에만 Firestore에서 읽음
           const userData = await getUserData(firebaseUser.uid);
           setCurrentUser(userData);
         }
@@ -104,38 +101,41 @@ const App: React.FC = () => {
   const role = currentUser.role as UserRole;
 
   return (
-    <Router>
-      <Layout role={role} onLogout={handleLogout}>
-        <Routes>
-          <Route path="/" element={<Home role={role} />} />
-          <Route path="/subject-manuals" element={<SubjectManuals role={role} />} />
-          <Route path="/ai" element={<AIGuide role={role} />} />
-          <Route path="/announcements" element={<Announcements role={role} />} />
-          <Route path="/announcements/:id" element={<AnnouncementDetail role={role} />} />
-          <Route path="/announcements/new" element={<AnnouncementEdit />} />
-          <Route path="/announcements/:id/edit" element={<AnnouncementEdit />} />
-          <Route path="/faq" element={<FAQList role={role} />} />
-          <Route path="/faq/new" element={<FAQEdit />} />
-          <Route path="/faq/:id/edit" element={<FAQEdit />} />
-          <Route path="/mypage" element={<StoreInfo role={role} currentUser={currentUser} onLogout={handleLogout} />} />
-          <Route path="/mypage/activity" element={<MyActivityDetail />} />
-          <Route path="/chat/:memberId" element={<ChatRoom currentUser={currentUser} />} />
-          <Route path="/manuals/:catId" element={<ManualCategory role={role} />} />
-          <Route path="/manuals/:catId/new" element={<ManualEdit />} />
-          <Route path="/manuals/:catId/:taskId" element={<TaskDetail role={role} currentUser={currentUser} />} />
-          <Route path="/manuals/:catId/:taskId/edit" element={<ManualEdit />} />
+    <ChatProvider>
+      <Router>
+        <Layout role={role} onLogout={handleLogout}>
+          <Routes>
+            <Route path="/" element={<Home role={role} />} />
+            <Route path="/subject-manuals" element={<SubjectManuals role={role} />} />
+            <Route path="/ai" element={<AIGuide role={role} />} />
+            {/* ... 나머지 라우트들 ... */}
+            <Route path="/announcements" element={<Announcements role={role} />} />
+            <Route path="/announcements/:id" element={<AnnouncementDetail role={role} />} />
+            <Route path="/announcements/new" element={<AnnouncementEdit />} />
+            <Route path="/announcements/:id/edit" element={<AnnouncementEdit />} />
+            <Route path="/faq" element={<FAQList role={role} />} />
+            <Route path="/faq/new" element={<FAQEdit />} />
+            <Route path="/faq/:id/edit" element={<FAQEdit />} />
+            <Route path="/mypage" element={<StoreInfo role={role} currentUser={currentUser} onLogout={handleLogout} />} />
+            <Route path="/mypage/activity" element={<MyActivityDetail />} />
+            <Route path="/chat/:memberId" element={<ChatRoom currentUser={currentUser} />} />
+            <Route path="/manuals/:catId" element={<ManualCategory role={role} />} />
+            <Route path="/manuals/:catId/new" element={<ManualEdit />} />
+            <Route path="/manuals/:catId/:taskId" element={<TaskDetail role={role} currentUser={currentUser} />} />
+            <Route path="/manuals/:catId/:taskId/edit" element={<ManualEdit />} />
 
-          {role === 'admin' && (
-            <>
-              <Route path="/admin/staff" element={<AdminStaff />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-            </>
-          )}
+            {role === 'admin' && (
+              <>
+                <Route path="/admin/staff" element={<AdminStaff />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
+              </>
+            )}
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Layout>
-    </Router>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </ChatProvider>
   );
 };
 
