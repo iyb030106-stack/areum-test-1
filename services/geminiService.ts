@@ -12,7 +12,7 @@ export async function getAIResponse(
   manualContext: string = "",
   signal?: AbortSignal
 ) {
-  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.API_KEY || process.env.GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY가 설정되지 않았습니다.");
