@@ -102,8 +102,9 @@ ${manualContext || "현재 매뉴얼 정보가 없습니다."}`;
 
       // 사용자 친화적인 에러 메시지로 변환
       if (rawMsg.includes("Quota exceeded") || rawMsg.includes("429")) {
-        throw new Error("AI가 현재 많은 요청을 처리하고 있어 잠시 기다려주세요.😊");
+        throw new Error("AI가 현재 많은 요청을 처리하고 있어 잠시 기다려주세요. 지속될 경우 구글 AI 스튜디오(aistudio.google.com)에서 사용량을 확인해 보세요. 😊");
       }
+
 
       throw new Error(`AI 호출 실패: ${rawMsg}`);
     }
