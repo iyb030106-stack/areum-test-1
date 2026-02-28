@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChatMessage, UserRole, ManualCategory, ManualItem } from '../types';
 import { HaemaIcon } from '../components/Layout';
@@ -8,6 +8,9 @@ import {
   subscribeToCategories,
   createManualCategory,
   createManualItem,
+  updateManualItem,
+  deleteManualItem,
+  deleteManualCategory,
 } from '../services/manualService';
 import { useChat } from '../contexts/ChatContext';
 
@@ -23,6 +26,8 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
   const [categories, setCategories] = useState<ManualCategory[]>([]);
   const [manuals, setManuals] = useState<ManualItem[]>([]);
   const [isApplying, setIsApplying] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messagesMap, isLoading, sendMessage, stopMessage, resetChat } = useChat();
   const messages = messagesMap[role] || [];
@@ -48,14 +53,14 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
     }
   }, [initialPrompt]);
 
-  // 매뉴얼 데이터를 AI가 읽기 쉬운 텍스트 컨텍스트로 변환
+  // 매뉴얼 데이터를 AI가 읽기 쉬운 텍스트 컨텍스트로 변환 (ID 포함)
   const getManualContext = () => {
     let context = "";
     categories.forEach(cat => {
-      context += `\n[카테고리: ${cat.name} (${cat.type === 'admin' ? '운영' : '수업'})]\n`;
+      context += `\n[카테고리: ${cat.name} (${cat.type === 'admin' ? '운영' : '수업'}) | 카테고리ID: ${cat.id}]\n`;
       const catItems = manuals.filter(m => m.categoryId === cat.id);
       catItems.forEach(item => {
-        context += `- ${item.title}: ${item.description}\n  단계: ${item.steps.join(' > ')}\n`;
+        context += `- [ID:${item.id}] ${item.title}: ${item.description}\n  단계: ${item.steps.join(' > ')}\n`;
       });
     });
     return context;
@@ -66,10 +71,8 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
     if (!textToSend.trim() || isLoading) return;
 
     setInput('');
-    const context = role === 'staff'
-      ? getManualContext()
-      : `현재 등록된 카테고리 목록: ${categories.map(c => `${c.name}(${c.type})`).join(', ')}`;
-
+    // 관리자/직원 모두 전체 컨텍스트(ID 포함)를 제공
+    const context = getManualContext();
     await sendMessage(textToSend, role, context);
   };
 
@@ -80,26 +83,72 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
     }
   };
 
-  // AI 제안 내용을 실제 시스템에 적용
+  // 음성 인식 토글
+  const handleVoice = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert('이 브라우저는 음성 인식을 지원하지 않습니다.\nChrome 또는 Edge를 사용해 주세요.');
+      return;
+    }
+
+    // 이미 듣고 있으면 중단
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ko-KR';
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = false;
+
+    recognition.onstart = () => setIsListening(true);
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join('');
+      setInput(transcript);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.onerror = (event: any) => {
+      if (event.error !== 'aborted') {
+        console.error('음성 인식 오류:', event.error);
+      }
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  // AI 제안 내용을 실제 시스템에 적용 (생성 / 수정 / 삭제)
   const handleApplyStructure = async (jsonStr: string) => {
     if (isApplying) return;
     try {
       setIsApplying(true);
       const data = JSON.parse(jsonStr);
-      if (data.requestType !== 'STRUCTURE_MANUAL') {
-        alert('올바른 매뉴얼 데이터 형식이 아닙니다.');
-        return;
-      }
 
-      if (data.groups && Array.isArray(data.groups)) {
+      // ── 생성 ──────────────────────────────────
+      if (data.requestType === 'STRUCTURE_MANUAL') {
+        if (!data.groups || !Array.isArray(data.groups)) {
+          alert('시스템에 적용할 수 있는 데이터 구조를 찾을 수 없습니다.');
+          return;
+        }
         for (let i = 0; i < data.groups.length; i++) {
           const group = data.groups[i];
-
-          // 중복 카테고리 체크
           const existingCat = categories.find(
             c => c.name === group.category.name && c.type === group.category.type
           );
-
           let catId;
           if (existingCat) {
             catId = existingCat.id;
@@ -111,7 +160,6 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
               bgClass: group.category.type === 'admin' ? 'bg-slate-50/50' : 'bg-primary/5'
             });
           }
-
           for (const item of group.items) {
             await createManualItem({
               ...item,
@@ -124,13 +172,61 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
             });
           }
         }
-        alert(`✅ 매뉴얼이 시스템에 성공적으로 반영되었습니다!`);
+        alert('✅ 매뉴얼이 시스템에 성공적으로 생성되었습니다!');
+
+        // ── 수정 ──────────────────────────────────
+      } else if (data.requestType === 'UPDATE_MANUAL') {
+        if (!data.items || !Array.isArray(data.items)) {
+          alert('수정할 매뉴얼 정보를 찾을 수 없습니다.');
+          return;
+        }
+        for (const item of data.items) {
+          if (!item.id) { alert(`ID가 없어 수정할 수 없습니다: ${item.title}`); continue; }
+          const { id, ...updateData } = item;
+          await updateManualItem(id, {
+            ...updateData,
+            lastEditedBy: 'AI_ASSISTANT',
+            lastEditedByName: 'Haema AI'
+          });
+        }
+        alert(`✅ ${data.items.length}개의 매뉴얼이 성공적으로 수정되었습니다!`);
+
+        // ── 삭제 ──────────────────────────────────
+      } else if (data.requestType === 'DELETE_MANUAL') {
+        if (!data.items || !Array.isArray(data.items)) {
+          alert('삭제할 매뉴얼 정보를 찾을 수 없습니다.');
+          return;
+        }
+        const titles = data.items.map((i: any) => `"${i.title}"`).join(', ');
+        const confirmed = window.confirm(`⚠️ 다음 매뉴얼을 삭제합니다:\n${titles}\n\n정말 삭제하시겠습니까?`);
+        if (!confirmed) return;
+        for (const item of data.items) {
+          if (!item.id) { alert(`ID가 없어 삭제할 수 없습니다: ${item.title}`); continue; }
+          await deleteManualItem(item.id);
+        }
+        alert(`🗑️ ${data.items.length}개의 매뉴얼이 삭제되었습니다.`);
+
+        // ── 카테고리 전체 삭제 ─────────────────────────────
+      } else if (data.requestType === 'DELETE_CATEGORY') {
+        if (!data.categories || !Array.isArray(data.categories)) {
+          alert('삭제할 카테고리 정보를 찾을 수 없습니다.');
+          return;
+        }
+        const catNames = data.categories.map((c: any) => `"${c.name}"`).join(', ');
+        const confirmed = window.confirm(`⚠️ 다음 카테고리(섹션)를 통째로 삭제합니다:\n${catNames}\n\n⚠️ 해당 카테고리 안의 모든 매뉴얼 항목도 함께 삭제됩니다!\n\n정말 삭제하시겠습니까?`);
+        if (!confirmed) return;
+        for (const cat of data.categories) {
+          if (!cat.id) { alert(`ID가 없어 삭제할 수 없습니다: ${cat.name}`); continue; }
+          await deleteManualCategory(cat.id);
+        }
+        alert(`🗑️ ${data.categories.length}개의 카테고리와 포함된 전체 매뉴얼이 삭제되었습니다.`);
+
       } else {
-        alert('시스템에 적용할 수 있는 데이터 구조를 찾을 수 없습니다.');
+        alert('올바른 매뉴얼 데이터 형식이 아닙니다.');
       }
     } catch (err: any) {
       console.error('Apply Structure Error:', err);
-      alert('매뉴얼 적용 중 오류가 발생했습니다: ' + err.message);
+      alert('매뉴얼 작업 중 오류가 발생했습니다: ' + err.message);
     } finally {
       setIsApplying(false);
     }
@@ -166,113 +262,203 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
     return null;
   };
 
+  const renderMessageContent = (content: string) => {
+    const textOnly = content.replace(/```json\n[\s\S]*?\n```/, '').trim();
+    const parts = textOnly.split(/(\*\*.*?\*\*)/g);
+
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <strong key={i} className="font-extrabold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700/50 px-1 rounded-sm mx-0.5">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
+  // 메시지가 초기 환영 메시지 1개뿐인지 확인 (랜딩 뷰 표시 여부)
+  const isLandingView = messages.length <= 1;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-96px)] overflow-hidden relative font-display">
-      <header className="flex items-center gap-5 bg-white/55 backdrop-blur-xl dark:bg-background-dark/55 px-7 pt-14 pb-5 border-b border-white/40 shrink-0 shadow-sm z-10 transition-all">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-[1.25rem] bg-white shadow-inner ${role === 'admin' ? 'text-emerald-500' : 'text-primary'}`}>
-          <HaemaIcon className="size-7" />
+    <div className="flex flex-col h-[calc(100vh-96px)] overflow-hidden relative font-display bg-white dark:bg-slate-950">
+
+      {/* ── 상단 고정 헤더 (항상 표시) ── */}
+      <header className="flex items-center justify-between px-6 pt-14 pb-4 shrink-0 z-10 border-b border-slate-100 dark:border-slate-800">
+        {/* 로고 + HAEMA 타이틀 */}
+        <div className="flex items-center gap-3">
+          <div className="size-9 rounded-[0.875rem] bg-slate-900 dark:bg-white flex items-center justify-center shadow-sm shrink-0">
+            <img src="/haema_logo.png" alt="HAEMA" className="size-6 object-contain" />
+          </div>
+          <span className="text-[18px] font-black tracking-tight text-slate-900 dark:text-white">HAEMA</span>
         </div>
-        <div className="flex flex-col flex-1">
-          <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
-            {role === 'admin' ? '관리자 AI 비서' : 'Haema AI 가이드'}
-          </h2>
-          <span className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ${role === 'admin' ? 'text-emerald-500' : 'text-primary'}`}>
-            {role === 'admin' ? 'Manual Architect Mode' : 'Knowledge Bank Mode'}
-          </span>
-        </div>
+
+        {/* 오른쪽: 초기화 버튼 */}
         <button
           onClick={handleReset}
-          className="size-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-90"
+          className="size-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-90 border border-slate-100 dark:border-slate-700"
           title="대화 초기화"
         >
-          <span className="material-symbols-outlined">restart_alt</span>
+          <span className="material-symbols-outlined text-[18px]">restart_alt</span>
         </button>
       </header>
 
-      <main ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-16 relative z-10">
-        {messages.map((msg, idx) => {
-          const jsonContent = msg.role === 'model' ? extractJson(msg.content) : null;
-          const displayContent = msg.content.replace(/```json\n[\s\S]*?\n```/, '').trim();
+      {/* ── 랜딩 뷰 (대화 없을 때) ── */}
+      {isLandingView && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-8 pb-8">
+          {/* 환영 텍스트 */}
+          <div className="flex flex-col items-center gap-2 text-center">
+            <p className="text-[22px] font-black text-slate-900 dark:text-white leading-snug">
+              무엇을 도와드릴까요?
+            </p>
+            <p className="text-[13px] text-slate-400 dark:text-slate-500 font-medium">
+              {role === 'admin'
+                ? '매뉴얼 생성·수정·삭제를 자유롭게 요청해보세요'
+                : '매뉴얼에 대해 궁금한 것을 무엇이든 물어보세요'}
+            </p>
+          </div>
 
-          return (
-            <div key={idx} className={`flex items-start gap-3.5 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-              {msg.role === 'model' && (
-                <div className={`h-9 w-9 rounded-xl bg-white shadow-inner flex items-center justify-center shrink-0 ${role === 'admin' ? 'text-emerald-500' : 'text-primary'}`}>
-                  <HaemaIcon className="size-6" />
-                </div>
-              )}
-              <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end max-w-[85%]' : 'items-start max-w-[85%]'}`}>
-                <div className={`rounded-[1.75rem] px-6 py-4.5 shadow-sm text-[14px] leading-relaxed tracking-normal whitespace-pre-wrap ${msg.role === 'user'
-                  ? 'rounded-tr-none bg-primary text-white shadow-xl shadow-primary/20 font-bold'
-                  : 'rounded-tl-none bg-white/80 backdrop-blur-md dark:bg-slate-800/70 text-slate-800 dark:text-white border border-white/40 dark:border-slate-700 font-medium'
-                  }`}>
-                  {displayContent}
+          {/* 빠른 시작 칩 — 직원 전용 (관리자는 칩 없음) */}
+          {role === 'staff' && (
+            <div className="flex flex-wrap gap-2 justify-center mt-1">
+              {['출결 처리 방법', '상담 문의 대응', '수업 진행 순서', '비품 신청 절차'].map(chip => (
+                <button
+                  key={chip}
+                  onClick={() => setInput(chip)}
+                  className="px-4 py-2 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[12px] font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all active:scale-95"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-                  {jsonContent && (
-                    <div className="mt-4 p-4 rounded-2xl bg-slate-900 text-white space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-emerald-400 text-sm">auto_awesome</span>
-                        <span className="text-[11px] font-black text-emerald-400 uppercase">매뉴얼 구조화됨</span>
-                      </div>
-                      <p className="text-[12px] font-medium opacity-80 leading-snug">
-                        AI가 입력하신 내용을 분석하여 시스템 구성을 마쳤습니다.
-                      </p>
-                      <button
-                        onClick={() => handleApplyStructure(jsonContent)}
-                        disabled={isApplying}
-                        className={`w-full py-3 ${isApplying ? 'bg-slate-400' : 'bg-emerald-500 hover:bg-emerald-600'} text-white rounded-xl text-[12px] font-black transition-all active:scale-95 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2`}
-                      >
-                        {isApplying && <div className="size-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
-                        {isApplying ? '시스템 적용 중...' : '시스템에 즉시 적용하기'}
-                      </button>
-                    </div>
-                  )}
+      {/* ── 채팅 뷰 (대화 시작 후) ── */}
+      {!isLandingView && (
+        <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-6 no-scrollbar relative z-10">
+          {messages.map((msg, idx) => {
+            const jsonContent = msg.role === 'model' ? extractJson(msg.content) : null;
+            return (
+              <div key={idx} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                {msg.role === 'model' && (
+                  <div className={`size-8 rounded-xl flex items-center justify-center shrink-0 border ${role === 'admin' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+                    <img src="/haema_logo.png" alt="AI" className="size-5 object-contain" />
+                  </div>
+                )}
+                <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end max-w-[82%]' : 'items-start max-w-[82%]'}`}>
+                  <div className={`rounded-[1.5rem] px-5 py-3.5 text-[14px] leading-relaxed tracking-normal whitespace-pre-wrap ${msg.role === 'user'
+                    ? 'rounded-tr-sm bg-slate-900 text-white font-medium dark:bg-slate-100 dark:text-slate-900'
+                    : 'rounded-tl-sm bg-slate-50 dark:bg-slate-800/70 text-slate-800 dark:text-white border border-slate-100 dark:border-slate-700 font-medium'
+                    }`}>
+                    {renderMessageContent(msg.content)}
+
+                    {jsonContent && (() => {
+                      let parsedType = 'UNKNOWN';
+                      try { parsedType = JSON.parse(jsonContent).requestType || 'UNKNOWN'; } catch { }
+                      const isCreate = parsedType === 'STRUCTURE_MANUAL';
+                      const isUpdate = parsedType === 'UPDATE_MANUAL';
+                      const isDelete = parsedType === 'DELETE_MANUAL';
+                      const isDeleteCat = parsedType === 'DELETE_CATEGORY';
+                      const labelText = isCreate ? '매뉴얼 생성 준비됨' : isUpdate ? '매뉴얼 수정 준비됨' : isDelete ? '매뉴얼 삭제 준비됨' : isDeleteCat ? '카테고리 전체 삭제 준비됨' : '작업 준비됨';
+                      const btnColor = (isDelete || isDeleteCat) ? 'bg-red-500 hover:bg-red-600' : isUpdate ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600';
+                      const iconColor = (isDelete || isDeleteCat) ? 'text-red-400' : isUpdate ? 'text-amber-400' : 'text-emerald-400';
+                      const btnText = isCreate ? '즉시 생성하기' : isUpdate ? '즉시 수정하기' : (isDelete || isDeleteCat) ? '즉시 삭제하기' : '즉시 적용하기';
+                      return (
+                        <div className="mt-2 px-3 py-2 rounded-xl bg-slate-900 text-white space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`material-symbols-outlined ${iconColor} text-xs`}>
+                              {isDelete ? 'delete' : isUpdate ? 'edit' : 'auto_awesome'}
+                            </span>
+                            <span className={`text-[9px] font-black ${iconColor} uppercase tracking-widest`}>{labelText}</span>
+                          </div>
+                          <button
+                            onClick={() => handleApplyStructure(jsonContent)}
+                            disabled={isApplying}
+                            className={`w-full py-1.5 ${isApplying ? 'bg-slate-600' : btnColor} text-white rounded-lg text-[10px] font-black transition-all active:scale-95 flex items-center justify-center gap-1.5`}
+                          >
+                            {isApplying && <div className="size-2.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
+                            {isApplying ? '처리 중...' : btnText}
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
                 </div>
-                <span className="text-[10px] font-black text-slate-400 px-2 opacity-50 uppercase tracking-tighter">{msg.timestamp}</span>
+              </div>
+            );
+          })}
+          {isLoading && (
+            <div className="flex gap-3 items-center pl-11">
+              <div className="flex gap-1.5">
+                <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></div>
+                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-150"></div>
               </div>
             </div>
-          );
-        })}
-        {isLoading && (
-          <div className="flex gap-3 items-center px-2">
-            <div className="flex gap-1">
-              <div className="w-2 h-2 bg-primary/30 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce delay-75"></div>
-              <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce delay-150"></div>
-            </div>
-            <span className="text-[11px] text-primary/40 font-black italic uppercase tracking-widest">Haema is Thinking...</span>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      )}
 
-      <div className="bg-white/55 dark:bg-background-dark/55 backdrop-blur-2xl px-6 py-6 border-t border-white/40 shrink-0 shadow-2xl relative z-20">
-        <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
-            <input
-              className={`w-full rounded-[1.5rem] border-none bg-white/55 dark:bg-slate-800/55 px-6 py-4.5 text-sm font-bold focus:ring-4 dark:text-white placeholder:text-slate-300 border border-white/40 ${role === 'admin' ? 'focus:ring-emerald-500/10' : 'focus:ring-primary/10'}`}
-              placeholder={role === 'admin' ? "매뉴얼 내용을 자유롭게 적어주세요..." : "무엇이 궁금하세요?"}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            />
-          </div>
+      {/* ── 하단 입력창 (Genspark 스타일) ── */}
+      <div className={`px-5 pb-6 pt-3 shrink-0 z-20 ${isLandingView ? '' : 'border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950'}`}>
+        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-[1.75rem] border border-slate-200 dark:border-slate-700 px-4 py-3 shadow-sm">
+          {/* + 버튼 */}
+          <button
+            onClick={handleReset}
+            className="size-8 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all active:scale-90 shrink-0 shadow-sm"
+            title="대화 초기화"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span>
+          </button>
+
+          {/* 텍스트 입력 */}
+          <input
+            className="flex-1 bg-transparent border-none focus:ring-0 text-[14px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
+            placeholder={role === 'admin' ? '매뉴얼 관리를 요청해보세요...' : '무엇이든 물어보세요...'}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          />
+
+          {/* 전송 / 중단 버튼 */}
           {isLoading ? (
             <button
               onClick={stopMessage}
-              className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-red-500 text-white shadow-xl shadow-red-500/20 active:scale-95 shrink-0 transition-all"
+              className="size-9 rounded-full bg-red-500 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shrink-0"
               title="중단하기"
             >
-              <span className="material-symbols-outlined text-2xl animate-pulse">stop</span>
+              <span className="material-symbols-outlined text-[18px]">stop</span>
             </button>
           ) : (
-            <button
-              onClick={() => handleSend()}
-              disabled={!input.trim()}
-              className={`flex h-14 w-14 items-center justify-center rounded-[1.5rem] text-white disabled:opacity-50 active:scale-95 shadow-2xl shrink-0 ${role === 'admin' ? 'bg-emerald-500 shadow-emerald-500/30' : 'bg-primary shadow-primary/30'}`}
-            >
-              <span className="material-symbols-outlined text-2xl">send</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {/* 마이크 버튼 */}
+              <button
+                onClick={handleVoice}
+                title={isListening ? '음성 인식 중단' : '음성으로 입력'}
+                className={`size-9 rounded-full flex items-center justify-center transition-all active:scale-90 shrink-0 ${isListening
+                  ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 animate-pulse'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200'
+                  }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {isListening ? 'mic' : 'mic'}
+                </span>
+              </button>
+
+              {/* 전송 버튼 */}
+              <button
+                onClick={() => handleSend()}
+                disabled={!input.trim()}
+                className="size-9 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center text-white dark:text-slate-900 shadow-lg active:scale-90 transition-all disabled:opacity-30 shrink-0"
+              >
+                <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

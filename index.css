@@ -32,3 +32,113 @@
 .animate-bounce-slow {
   animation: bounce-slow 3s infinite;
 }
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-16px) rotate(2deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+@keyframes splash-text-in {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bar-fill {
+  0% {
+    width: 0%;
+  }
+
+  25% {
+    width: 30%;
+  }
+
+  55% {
+    width: 62%;
+  }
+
+  80% {
+    width: 85%;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes splash-fade-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+    pointer-events: none;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.animate-float {
+  animation: float 3.8s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.animate-splash-text {
+  animation: splash-text-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-bar-fill {
+  animation: bar-fill 2.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-splash-fade-out {
+  animation: splash-fade-out 2.8s ease-in-out forwards;
+}
+
+.animate-ripple {
+  animation: ripple 2s ease-out infinite;
+}

@@ -71,7 +71,7 @@ const QuickHelp: React.FC = () => {
 
             <section>
               <button
-                onClick={() => navigate('/ai')}
+                onClick={() => navigate('/')}
                 className="w-full flex items-center gap-6 p-7 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[3rem] active:scale-[0.98] transition-all shadow-xl shadow-primary/5"
               >
                 <div className="p-4 bg-primary rounded-full text-white shadow-lg shadow-primary/20 shrink-0">

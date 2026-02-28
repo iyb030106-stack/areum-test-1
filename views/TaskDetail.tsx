@@ -42,7 +42,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ role, currentUser }) => {
   const handleAskAI = () => {
     if (!item) return;
     const contextPrompt = `'${item.title}' 매뉴얼의 단계를 수행하던 중 도움이 필요합니다. 특히 "${item.steps?.[0] || item.description}" 부분에 대해 더 자세히 설명해 주세요.`;
-    navigate('/ai', { state: { prompt: contextPrompt } });
+    navigate('/', { state: { prompt: contextPrompt } });
   };
 
   const handleScrap = async () => {
@@ -105,8 +105,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ role, currentUser }) => {
           <button
             onClick={handleScrap}
             className={`size-9 rounded-full flex items-center justify-center transition-all active:scale-95 ${isScrapped
-                ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                : 'bg-amber-50 text-amber-500'
+              ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+              : 'bg-amber-50 text-amber-500'
               }`}
             title={isScrapped ? '스크랩 취소' : '스크랩'}
           >

@@ -42,8 +42,8 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
 
       <nav className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100/50 dark:border-slate-800/50 px-4 pb-8 pt-3 z-50 transition-all duration-300 ${location.pathname.startsWith('/chat/') ? 'translate-y-[calc(100%+3rem)] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
         <div className="flex items-end justify-between">
-          <NavLink to="/" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
-            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/' ? 'fill-1' : ''}`}>grid_view</span>
+          <NavLink to="/home" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
+            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/home' ? 'fill-1' : ''}`}>grid_view</span>
             <span className="text-[10px] font-black tracking-tighter">운영 매뉴얼</span>
           </NavLink>
 
@@ -52,11 +52,11 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
             <span className="text-[10px] font-black tracking-tighter">운영 노하우</span>
           </NavLink>
 
-          <NavLink to="/ai" className="flex-1 flex flex-col items-center -mt-12 group">
-            <div className={`size-16 rounded-[2.25rem] flex items-center justify-center shadow-2xl border-[1.5px] border-slate-200/80 dark:border-slate-700/80 active:scale-95 transition-all ${location.pathname === '/ai' ? 'bg-primary text-white shadow-primary/40' : 'bg-white text-slate-900 shadow-slate-200/50'}`}>
+          <NavLink to="/" end className="flex-1 flex flex-col items-center -mt-12 group">
+            <div className={`size-16 rounded-[2.25rem] flex items-center justify-center shadow-2xl border-[1.5px] border-slate-200/80 dark:border-slate-700/80 active:scale-95 transition-all ${location.pathname === '/' ? 'bg-primary text-white shadow-primary/40' : 'bg-white text-slate-900 shadow-slate-200/50'}`}>
               <HaemaIcon className="size-9" />
             </div>
-            <span className={`text-[10px] font-black mt-1.5 tracking-tighter ${location.pathname === '/ai' ? 'text-primary' : 'text-slate-400 opacity-50'}`}>Haema</span>
+            <span className={`text-[10px] font-black mt-1.5 tracking-tighter ${location.pathname === '/' ? 'text-primary' : 'text-slate-400 opacity-50'}`}>Haema</span>
           </NavLink>
 
           <NavLink to="/announcements" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>

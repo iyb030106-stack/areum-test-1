@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { ChatMessage, UserRole } from '../types';
-import { getAIResponse } from '../services/geminiService';
+import { getAIResponseStream } from '../services/geminiService';
 
 
 interface ChatContextType {
@@ -50,10 +50,22 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const timestamp = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
         const userMsg: ChatMessage = { role: 'user', content: text, timestamp };
 
+        // 1. 사용자 메시지 추가
+        let baseMessages: ChatMessage[] = [];
         setMessagesMap(prev => {
             const newMsgs = [...(prev[role] || []), userMsg];
+            baseMessages = newMsgs;
             localStorage.setItem(`chat_history_${role}`, JSON.stringify(newMsgs));
             return { ...prev, [role]: newMsgs };
+        });
+
+        // 2. 빈 AI 메시지 placeholder 추가 (스트리밍으로 채워짐)
+        const modelTimestamp = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        const placeholderMsg: ChatMessage = { role: 'model', content: '', timestamp: modelTimestamp };
+
+        setMessagesMap(prev => {
+            const withPlaceholder = [...(prev[role] || []), placeholderMsg];
+            return { ...prev, [role]: withPlaceholder };
         });
 
         setIsLoading(true);
@@ -61,31 +73,69 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         abortControllerRef.current = controller;
 
         try {
-            const history = (messagesMap[role] || []).slice(-5).map(m => ({ role: m.role, content: m.content }));
-            const response = await getAIResponse(text, history, role, manualContext, controller.signal);
+            const history = (baseMessages).slice(-6).map(m => ({ role: m.role, content: m.content }));
 
-            const modelMsg: ChatMessage = {
-                role: 'model',
-                content: response || "답변을 드릴 수 없습니다.",
-                timestamp: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
-            };
+            // 3. 스트리밍: 청크가 올 때마다 마지막 메시지 content를 누적 업데이트
+            await getAIResponseStream(
+                text,
+                history,
+                role,
+                manualContext,
+                (chunk: string) => {
+                    setMessagesMap(prev => {
+                        const msgs = [...(prev[role] || [])];
+                        if (msgs.length === 0) return prev;
+                        const lastIdx = msgs.length - 1;
+                        // 마지막 메시지가 model 메시지인 경우에만 업데이트
+                        if (msgs[lastIdx].role === 'model') {
+                            msgs[lastIdx] = {
+                                ...msgs[lastIdx],
+                                content: msgs[lastIdx].content + chunk
+                            };
+                        }
+                        return { ...prev, [role]: msgs };
+                    });
+                },
+                controller.signal
+            );
 
+            // 4. 완료 후 로컬스토리지 저장
             setMessagesMap(prev => {
-                const newMsgs = [...(prev[role] || []), modelMsg];
-                localStorage.setItem(`chat_history_${role}`, JSON.stringify(newMsgs));
-                return { ...prev, [role]: newMsgs };
+                const finalMsgs = prev[role] || [];
+                localStorage.setItem(`chat_history_${role}`, JSON.stringify(finalMsgs));
+                return prev;
             });
+
         } catch (err: any) {
             if (err.name === 'AbortError') {
-                console.log('AI 요청이 중단되었습니다.');
+                // 중단 시 지금까지 쌓인 내용 저장
+                setMessagesMap(prev => {
+                    const msgs = prev[role] || [];
+                    if (msgs.length > 0 && msgs[msgs.length - 1].role === 'model' && !msgs[msgs.length - 1].content) {
+                        // 내용 없으면 placeholder 제거
+                        const trimmed = msgs.slice(0, -1);
+                        localStorage.setItem(`chat_history_${role}`, JSON.stringify(trimmed));
+                        return { ...prev, [role]: trimmed };
+                    }
+                    localStorage.setItem(`chat_history_${role}`, JSON.stringify(msgs));
+                    return prev;
+                });
                 return;
             }
-            const errorMsg: ChatMessage = {
-                role: 'model',
-                content: "오류가 발생했습니다: " + err.message,
-                timestamp: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
-            };
-            setMessagesMap(prev => ({ ...prev, [role]: [...(prev[role] || []), errorMsg] }));
+
+            // 오류 메시지로 placeholder 교체
+            setMessagesMap(prev => {
+                const msgs = [...(prev[role] || [])];
+                const lastIdx = msgs.length - 1;
+                if (msgs[lastIdx]?.role === 'model') {
+                    msgs[lastIdx] = {
+                        ...msgs[lastIdx],
+                        content: "오류가 발생했습니다: " + err.message
+                    };
+                }
+                localStorage.setItem(`chat_history_${role}`, JSON.stringify(msgs));
+                return { ...prev, [role]: msgs };
+            });
         } finally {
             setIsLoading(false);
             abortControllerRef.current = null;
@@ -118,4 +168,3 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         </ChatContext.Provider>
     );
 };
-
