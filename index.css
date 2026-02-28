@@ -142,3 +142,6 @@
 .animate-ripple {
   animation: ripple 2s ease-out infinite;
 }
+.haema-flip {
+  transform: scaleX(-1);
+}
