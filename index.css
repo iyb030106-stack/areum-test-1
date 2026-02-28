@@ -139,6 +139,32 @@
   animation: splash-fade-out 2.8s ease-in-out forwards;
 }
 
+@keyframes bubble-up {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.6;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-110vh) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-sway {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(30px); }
+}
+
+.bubble-anim {
+  animation: bubble-up 10s infinite linear, bubble-sway 3s infinite ease-in-out;
+}
+
 .animate-ripple {
   animation: ripple 2s ease-out infinite;
 }

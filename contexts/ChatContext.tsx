@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { ChatMessage, UserRole } from '../types';
 import { getAIResponseStream } from '../services/geminiService';
 
@@ -44,7 +44,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     }, []);
 
-    const sendMessage = async (text: string, role: UserRole, manualContext: string = "") => {
+    const sendMessage = useCallback(async (text: string, role: UserRole, manualContext: string = "") => {
         const timestamp = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
         const userMsg: ChatMessage = { role: 'user', content: text, timestamp };
 
@@ -138,20 +138,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setIsLoading(false);
             abortControllerRef.current = null;
         }
-    };
+    }, []);
 
-    const stopMessage = () => {
+    const stopMessage = useCallback(() => {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
             setIsLoading(false);
         }
-    };
+    }, []);
 
-    const resetChat = (role: UserRole) => {
+    const resetChat = useCallback((role: UserRole) => {
         stopMessage();
         localStorage.setItem(`chat_history_${role}`, JSON.stringify([]));
         setMessagesMap(prev => ({ ...prev, [role]: [] }));
-    };
+    }, [stopMessage]);
 
     return (
         <ChatContext.Provider value={{

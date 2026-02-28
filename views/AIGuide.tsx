@@ -35,13 +35,16 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
   const messages = messagesMap[role] || [];
 
   useEffect(() => {
+    // 진입 시 대화 자동 초기화
+    resetChat(role);
+
     const unsubCats = subscribeToCategories(setCategories);
     const unsubItems = subscribeToAllManuals(setManuals);
     return () => {
       unsubCats();
       unsubItems();
     };
-  }, []);
+  }, [role, resetChat]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -374,9 +377,17 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
                             </span>
                             <span className={`text-[9px] font-black ${iconColor} uppercase tracking-widest`}>{labelText}</span>
                           </div>
-                        );
-                      })()}
-                    </div>
+                          <button
+                            onClick={() => handleApplyStructure(jsonContent)}
+                            className={`w-full py-2.5 rounded-xl text-[11px] font-black text-white shadow-lg active:scale-95 transition-all ${btnColor}`}
+                            disabled={isApplying}
+                          >
+                            {isApplying ? '처리 중...' : btnText}
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
                     <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
                   </div>
                 </div>
@@ -421,7 +432,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
           {/* 텍스트 입력 */}
           <input
             className="flex-1 bg-transparent border-none focus:ring-0 text-[14px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
-            placeholder={role === 'admin' ? '매뉴얼 관리를 요청해보세요...' : '무엇이든 물어보세요...'}
+            placeholder="업무 방법이 궁금하면 HAEMA에게 물어보세요"
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
