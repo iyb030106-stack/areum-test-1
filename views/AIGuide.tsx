@@ -432,7 +432,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
           {/* 텍스트 입력 */}
           <input
             className="flex-1 bg-transparent border-none focus:ring-0 text-[14px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
-            placeholder={role === 'admin' ? '매뉴얼 관리를 요청해보세요...' : '무엇이든 물어보세요...'}
+            placeholder="업무 방법이 궁금하면 HAEMA에게 물어보세요"
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
