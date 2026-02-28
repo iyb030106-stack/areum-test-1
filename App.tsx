@@ -42,12 +42,7 @@ const SplashScreen = () => (
     {/* 로고 영역 */}
     <div className="flex flex-col items-center gap-8 z-10">
       {/* 해마 아이콘 */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-white/5 rounded-[3rem] blur-2xl scale-110" />
-        <div className="relative size-36 bg-white/8 backdrop-blur-xl rounded-[3rem] flex items-center justify-center border border-white/10 shadow-2xl animate-float">
-          <img src="/haema_logo.png" alt="HAEMA" className="size-24 object-contain drop-shadow-2xl haema-flip" />
-        </div>
-      </div>
+      <img src="/haema_logo.png" alt="HAEMA" className="size-40 object-contain drop-shadow-2xl haema-flip animate-float" />
 
       {/* 브랜드 텍스트 */}
       <div className="flex flex-col items-center gap-2">
