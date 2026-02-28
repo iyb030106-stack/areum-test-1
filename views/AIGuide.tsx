@@ -315,19 +315,54 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
 
       {/* ── 랜딩 뷰 (대화 없을 때) ── */}
       {isLandingView && (
-        <div className="flex-1 flex flex-col items-center justify-center pb-12">
-          {/* 아이콘 + 타이틀 (Genspark 스타일) */}
-          <div className="flex items-center gap-4">
-            <div className="size-16 rounded-[1.5rem] bg-slate-900 dark:bg-white flex items-center justify-center shadow-lg shrink-0">
-              <img src="/haema_logo.png" alt="HAEMA" className="size-11 object-contain haema-flip" />
-            </div>
-            <span className="text-[28px] font-black tracking-tight text-slate-900 dark:text-white">
-              HAEMA AI
-            </span>
+        <div className="flex-1 flex items-center justify-center pb-12 px-6">
+
+          {/* 해마 왼쪽 + 말풍선 오른쪽 */}
+          <div className="flex items-start gap-3">
+
+            {/* 해마 캐릭터 */}
+            <img
+              src="/haema_logo.png"
+              alt="HAEMA"
+              className="size-32 object-contain haema-flip animate-float drop-shadow-sm shrink-0"
+            />
+
+            {/* 직원 모드: 말풍선 (해마 오른쪽, 머리 높이에 맞춤) */}
+            {role === 'staff' && (
+              <div className="relative mt-3">
+                {/* 꼬리 바깥 삼각형 (테두리색) */}
+                <div
+                  className="absolute"
+                  style={{
+                    left: -11,
+                    top: 9,
+                    width: 0, height: 0,
+                    borderTop: '9px solid transparent',
+                    borderBottom: '9px solid transparent',
+                    borderRight: '11px solid #e2e8f0',
+                  }}
+                />
+                {/* 꼬리 안쪽 삼각형 (배경색 — 테두리만 보이게) */}
+                <div
+                  className="absolute"
+                  style={{
+                    left: -8,
+                    top: 10,
+                    width: 0, height: 0,
+                    borderTop: '8px solid transparent',
+                    borderBottom: '8px solid transparent',
+                    borderRight: '10px solid white',
+                  }}
+                />
+                {/* 말풍선 박스 */}
+                <div className="bg-white text-slate-400 text-[13px] font-medium px-4 py-2.5 rounded-2xl border border-slate-200 whitespace-nowrap">
+                  업무 방법이 궁금하면 저에게 물어보세요 !
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )
-      }
+      )}
 
       {/* ── 채팅 뷰 (대화 시작 후) ── */}
       {!isLandingView && (
@@ -420,15 +455,6 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
         </button>
 
         <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-[1.75rem] border border-slate-200 dark:border-slate-700 px-4 py-3 shadow-sm">
-          {/* + 버튼 */}
-          <button
-            onClick={handleReset}
-            className="size-8 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all active:scale-90 shrink-0 shadow-sm"
-            title="대화 초기화"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-          </button>
-
           {/* 텍스트 입력 */}
           <input
             className="flex-1 bg-transparent border-none focus:ring-0 text-[14px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
