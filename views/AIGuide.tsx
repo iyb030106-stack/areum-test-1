@@ -290,20 +290,15 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
   };
 
   // 메시지가 초기 환영 메시지 1개뿐인지 확인 (랜딩 뷰 표시 여부)
-  const isLandingView = messages.length <= 1;
+  const isLandingView = messages.length === 0;
 
   return (
     <div className="flex flex-col h-[calc(100vh-96px)] overflow-hidden relative font-display bg-white dark:bg-slate-950">
 
       {/* ── 상단 고정 헤더 (항상 표시) ── */}
       <header className="flex items-center justify-between px-6 pt-14 pb-4 shrink-0 z-10 border-b border-slate-100 dark:border-slate-800">
-        {/* 로고 + HAEMA 타이틀 */}
-        <div className="flex items-center gap-3">
-          <div className="size-9 rounded-[0.875rem] bg-slate-900 dark:bg-white flex items-center justify-center shadow-sm shrink-0">
-            <img src="/haema_logo.png" alt="HAEMA" className="size-6 object-contain haema-flip" />
-          </div>
-          <span className="text-[18px] font-black tracking-tight text-slate-900 dark:text-white">HAEMA</span>
-        </div>
+        {/* HAEMA 타이틀 */}
+        <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">HAEMA</span>
 
         {/* 오른쪽: 초기화 버튼 */}
         <button
@@ -317,35 +312,19 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
 
       {/* ── 랜딩 뷰 (대화 없을 때) ── */}
       {isLandingView && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-8 pb-8">
-          {/* 환영 텍스트 */}
-          <div className="flex flex-col items-center gap-2 text-center">
-            <p className="text-[22px] font-black text-slate-900 dark:text-white leading-snug">
-              무엇을 도와드릴까요?
-            </p>
-            <p className="text-[13px] text-slate-400 dark:text-slate-500 font-medium">
-              {role === 'admin'
-                ? '매뉴얼 생성·수정·삭제를 자유롭게 요청해보세요'
-                : '매뉴얼에 대해 궁금한 것을 무엇이든 물어보세요'}
-            </p>
-          </div>
-
-          {/* 빠른 시작 칩 — 직원 전용 (관리자는 칩 없음) */}
-          {role === 'staff' && (
-            <div className="flex flex-wrap gap-2 justify-center mt-1">
-              {['출결 처리 방법', '상담 문의 대응', '수업 진행 순서', '비품 신청 절차'].map(chip => (
-                <button
-                  key={chip}
-                  onClick={() => setInput(chip)}
-                  className="px-4 py-2 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[12px] font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all active:scale-95"
-                >
-                  {chip}
-                </button>
-              ))}
+        <div className="flex-1 flex flex-col items-center justify-center pb-12">
+          {/* 아이콘 + 타이틀 (Genspark 스타일) */}
+          <div className="flex items-center gap-4">
+            <div className="size-16 rounded-[1.5rem] bg-slate-900 dark:bg-white flex items-center justify-center shadow-lg shrink-0">
+              <img src="/haema_logo.png" alt="HAEMA" className="size-11 object-contain haema-flip" />
             </div>
-          )}
+            <span className="text-[28px] font-black tracking-tight text-slate-900 dark:text-white">
+              HAEMA AI
+            </span>
+          </div>
         </div>
-      )}
+      )
+      }
 
       {/* ── 채팅 뷰 (대화 시작 후) ── */}
       {!isLandingView && (
@@ -395,34 +374,26 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
                             </span>
                             <span className={`text-[9px] font-black ${iconColor} uppercase tracking-widest`}>{labelText}</span>
                           </div>
-                          <button
-                            onClick={() => handleApplyStructure(jsonContent)}
-                            disabled={isApplying}
-                            className={`w-full py-1.5 ${isApplying ? 'bg-slate-600' : btnColor} text-white rounded-lg text-[10px] font-black transition-all active:scale-95 flex items-center justify-center gap-1.5`}
-                          >
-                            {isApplying && <div className="size-2.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
-                            {isApplying ? '처리 중...' : btnText}
-                          </button>
-                        </div>
-                      );
-                    })()}
+                        );
+                      })()}
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
+                </div>
+              );
+            })}
+            {isLoading && (
+              <div className="flex gap-3 items-center pl-11">
+                <div className="flex gap-1.5">
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></div>
+                  <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-150"></div>
                 </div>
               </div>
-            );
-          })}
-          {isLoading && (
-            <div className="flex gap-3 items-center pl-11">
-              <div className="flex gap-1.5">
-                <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></div>
-                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-150"></div>
-              </div>
-            </div>
-          )}
-        </main>
-      )}
+            )}
+          </main>
+        )
+      }
 
       {/* ── 하단 입력창 (Genspark 스타일) ── */}
       <div className={`px-5 pb-6 pt-3 shrink-0 z-20 ${isLandingView ? '' : 'border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950'}`}>
@@ -494,114 +465,116 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
       </div>
 
       {/* ── 사용 방법 바텀 시트 ── */}
-      {showGuide && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
-          onClick={() => setShowGuide(false)}
-        >
-          {/* 딤드 배경 */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-
-          {/* 시트 본문 */}
+      {
+        showGuide && (
           <div
-            className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-t-[2rem] px-6 pt-5 pb-10 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-end justify-center"
+            onClick={() => setShowGuide(false)}
           >
-            {/* 핸들 바 */}
-            <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6" />
+            {/* 딤드 배경 */}
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
 
-            {/* 헤더 */}
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-[17px] font-black text-slate-900 dark:text-white">사용 방법 가이드</h2>
-                <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
-                  {role === 'admin' ? '관리자 모드 · 매뉴얼 관리' : '직원 모드 · 지식 검색'}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowGuide(false)}
-                className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 active:scale-90 transition-all"
-              >
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
-            </div>
+            {/* 시트 본문 */}
+            <div
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-t-[2rem] px-6 pt-5 pb-10 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 핸들 바 */}
+              <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6" />
 
-            {/* 컨텐츠 */}
-            <div className="space-y-4">
-              {role === 'admin' ? (
-                <>
-                  {[
-                    { icon: 'add_circle', color: 'text-emerald-500 bg-emerald-50', title: '매뉴얼 추가', desc: '새로운 매뉴얼 항목을 만들어요', examples: ['"수학 기초반 수업 진행 방법 추가해줘"', '"학생 상담 절차 새로 만들어줘"'] },
-                    { icon: 'edit', color: 'text-amber-500 bg-amber-50', title: '매뉴얼 수정', desc: '기존 항목의 내용을 바꿔요', examples: ['"출결 관리 매뉴얼 내용 수정해줘"', '"비품 신청 절차 단계 바꿔줘"'] },
-                    { icon: 'delete', color: 'text-red-500 bg-red-50', title: '매뉴얼 / 카테고리 삭제', desc: '항목 또는 카테고리 전체를 삭제해요', examples: ['"운영 관리 카테고리 삭제해줘"', '"출결 관련 항목 지워줘"'] },
-                  ].map(item => (
-                    <div key={item.title} className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800">
-                      <div className={`size-9 rounded-xl flex items-center justify-center shrink-0 ${item.color} dark:bg-slate-700`}>
-                        <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-black text-slate-800 dark:text-white">{item.title}</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5 mb-2">{item.desc}</p>
-                        <div className="space-y-1">
-                          {item.examples.map(ex => (
-                            <button
-                              key={ex}
-                              onClick={() => { setInput(ex.replace(/"/g, '')); setShowGuide(false); }}
-                              className="block w-full text-left text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-xl px-3 py-1.5 hover:bg-slate-100 transition-all active:scale-95"
-                            >
-                              {ex}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <>
-                  {[
-                    { icon: 'search', color: 'text-blue-500 bg-blue-50', title: '매뉴얼 검색', desc: '등록된 매뉴얼에서 찾아드려요', examples: ['"출결 처리 방법 알려줘"', '"학생 상담 대응 절차 어떻게 돼?"'] },
-                    { icon: 'help', color: 'text-violet-500 bg-violet-50', title: '업무 질문', desc: '학원 운영 관련 질문에 답해요', examples: ['"수업 중 문제 학생 대응법"', '"학부모 민원 처리 순서"'] },
-                  ].map(item => (
-                    <div key={item.title} className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800">
-                      <div className={`size-9 rounded-xl flex items-center justify-center shrink-0 ${item.color} dark:bg-slate-700`}>
-                        <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-black text-slate-800 dark:text-white">{item.title}</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5 mb-2">{item.desc}</p>
-                        <div className="space-y-1">
-                          {item.examples.map(ex => (
-                            <button
-                              key={ex}
-                              onClick={() => { setInput(ex.replace(/"/g, '')); setShowGuide(false); }}
-                              className="block w-full text-left text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-xl px-3 py-1.5 hover:bg-slate-100 transition-all active:scale-95"
-                            >
-                              {ex}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {/* 음성 입력 안내 */}
-              <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800">
-                <div className="size-9 rounded-xl bg-rose-50 dark:bg-slate-700 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[18px] text-rose-500">mic</span>
-                </div>
+              {/* 헤더 */}
+              <div className="flex items-center justify-between mb-5">
                 <div>
-                  <p className="text-[13px] font-black text-slate-800 dark:text-white">음성으로 입력</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">입력창 오른쪽 🎤 버튼을 탭하면 말로 요청할 수 있어요</p>
+                  <h2 className="text-[17px] font-black text-slate-900 dark:text-white">사용 방법 가이드</h2>
+                  <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+                    {role === 'admin' ? '관리자 모드 · 매뉴얼 관리' : '직원 모드 · 지식 검색'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowGuide(false)}
+                  className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 active:scale-90 transition-all"
+                >
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+
+              {/* 컨텐츠 */}
+              <div className="space-y-4">
+                {role === 'admin' ? (
+                  <>
+                    {[
+                      { icon: 'add_circle', color: 'text-emerald-500 bg-emerald-50', title: '매뉴얼 추가', desc: '새로운 매뉴얼 항목을 만들어요', examples: ['"수학 기초반 수업 진행 방법 추가해줘"', '"학생 상담 절차 새로 만들어줘"'] },
+                      { icon: 'edit', color: 'text-amber-500 bg-amber-50', title: '매뉴얼 수정', desc: '기존 항목의 내용을 바꿔요', examples: ['"출결 관리 매뉴얼 내용 수정해줘"', '"비품 신청 절차 단계 바꿔줘"'] },
+                      { icon: 'delete', color: 'text-red-500 bg-red-50', title: '매뉴얼 / 카테고리 삭제', desc: '항목 또는 카테고리 전체를 삭제해요', examples: ['"운영 관리 카테고리 삭제해줘"', '"출결 관련 항목 지워줘"'] },
+                    ].map(item => (
+                      <div key={item.title} className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800">
+                        <div className={`size-9 rounded-xl flex items-center justify-center shrink-0 ${item.color} dark:bg-slate-700`}>
+                          <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-black text-slate-800 dark:text-white">{item.title}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 mb-2">{item.desc}</p>
+                          <div className="space-y-1">
+                            {item.examples.map(ex => (
+                              <button
+                                key={ex}
+                                onClick={() => { setInput(ex.replace(/"/g, '')); setShowGuide(false); }}
+                                className="block w-full text-left text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-xl px-3 py-1.5 hover:bg-slate-100 transition-all active:scale-95"
+                              >
+                                {ex}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {[
+                      { icon: 'search', color: 'text-blue-500 bg-blue-50', title: '매뉴얼 검색', desc: '등록된 매뉴얼에서 찾아드려요', examples: ['"출결 처리 방법 알려줘"', '"학생 상담 대응 절차 어떻게 돼?"'] },
+                      { icon: 'help', color: 'text-violet-500 bg-violet-50', title: '업무 질문', desc: '학원 운영 관련 질문에 답해요', examples: ['"수업 중 문제 학생 대응법"', '"학부모 민원 처리 순서"'] },
+                    ].map(item => (
+                      <div key={item.title} className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800">
+                        <div className={`size-9 rounded-xl flex items-center justify-center shrink-0 ${item.color} dark:bg-slate-700`}>
+                          <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-black text-slate-800 dark:text-white">{item.title}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 mb-2">{item.desc}</p>
+                          <div className="space-y-1">
+                            {item.examples.map(ex => (
+                              <button
+                                key={ex}
+                                onClick={() => { setInput(ex.replace(/"/g, '')); setShowGuide(false); }}
+                                className="block w-full text-left text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-xl px-3 py-1.5 hover:bg-slate-100 transition-all active:scale-95"
+                              >
+                                {ex}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* 음성 입력 안내 */}
+                <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800">
+                  <div className="size-9 rounded-xl bg-rose-50 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px] text-rose-500">mic</span>
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-black text-slate-800 dark:text-white">음성으로 입력</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">입력창 오른쪽 🎤 버튼을 탭하면 말로 요청할 수 있어요</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
