@@ -145,3 +145,12 @@
 .haema-flip {
   transform: scaleX(-1);
 }
+
+@keyframes float {
+  0%, 100% { transform: scaleX(-1) translateY(0px); }
+  50% { transform: scaleX(-1) translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
