@@ -15,7 +15,7 @@ export const HaemaIcon = ({ className = "" }: HaemaIconProps) => (
   <img
     src="/haema_logo.png"
     alt="Haema Logo"
-    className={`${className} object-contain`}
+    className={`${className} object-contain haema-flip`}
   />
 );
 

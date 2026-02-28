@@ -290,7 +290,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
         {/* 로고 + HAEMA 타이틀 */}
         <div className="flex items-center gap-3">
           <div className="size-9 rounded-[0.875rem] bg-slate-900 dark:bg-white flex items-center justify-center shadow-sm shrink-0">
-            <img src="/haema_logo.png" alt="HAEMA" className="size-6 object-contain" />
+            <img src="/haema_logo.png" alt="HAEMA" className="size-6 object-contain haema-flip" />
           </div>
           <span className="text-[18px] font-black tracking-tight text-slate-900 dark:text-white">HAEMA</span>
         </div>
@@ -346,7 +346,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
               <div key={idx} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                 {msg.role === 'model' && (
                   <div className={`size-8 rounded-xl flex items-center justify-center shrink-0 border ${role === 'admin' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
-                    <img src="/haema_logo.png" alt="AI" className="size-5 object-contain" />
+                    <img src="/haema_logo.png" alt="AI" className="size-5 object-contain haema-flip" />
                   </div>
                 )}
                 <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end max-w-[82%]' : 'items-start max-w-[82%]'}`}>
