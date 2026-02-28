@@ -24,6 +24,7 @@ import MyActivityDetail from './views/MyActivityDetail';
 import ChatRoom from './views/ChatRoom';
 import FAQList from './views/FAQList';
 import FAQEdit from './views/FAQEdit';
+import ChatList from './views/ChatList';
 import { UserRole } from './types';
 import { MANUAL_CATEGORIES } from './constants';
 import { initializeCategoriesIfNeeded } from './services/manualService';
@@ -118,6 +119,7 @@ const App: React.FC = () => {
             <Route path="/faq/:id/edit" element={<FAQEdit />} />
             <Route path="/mypage" element={<StoreInfo role={role} currentUser={currentUser} onLogout={handleLogout} />} />
             <Route path="/mypage/activity" element={<MyActivityDetail />} />
+            <Route path="/chat" element={<ChatList currentUser={currentUser} />} />
             <Route path="/chat/:memberId" element={<ChatRoom currentUser={currentUser} />} />
             <Route path="/manuals/:catId" element={<ManualCategory role={role} />} />
             <Route path="/manuals/:catId/new" element={<ManualEdit />} />
