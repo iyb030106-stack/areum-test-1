@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FlowyIcon } from '../components/Layout';
+import { HaemaIcon } from '../components/Layout';
 import { subscribeToAllManuals, ManualItem } from '../services/manualService';
 
 const QuickHelp: React.FC = () => {
@@ -75,7 +75,7 @@ const QuickHelp: React.FC = () => {
                 className="w-full flex items-center gap-6 p-7 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[3rem] active:scale-[0.98] transition-all shadow-xl shadow-primary/5"
               >
                 <div className="p-4 bg-primary rounded-full text-white shadow-lg shadow-primary/20 shrink-0">
-                  <FlowyIcon className="size-8" />
+                  <HaemaIcon className="size-8" />
                 </div>
                 <div className="flex flex-col items-start text-left flex-1">
                   <span className="text-base font-black text-slate-900 dark:text-white leading-tight">해결 방법이 복잡한가요?</span>

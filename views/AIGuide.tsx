@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChatMessage, UserRole, ManualCategory, ManualItem } from '../types';
-import { FlowyIcon } from '../components/Layout';
+import { HaemaIcon } from '../components/Layout';
 import {
   subscribeToAllManuals,
   subscribeToCategories,
@@ -120,7 +120,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
               timeEstimate: item.timeEstimate || '10분',
               level: item.level || 'Beginner',
               lastEditedBy: 'AI_ASSISTANT',
-              lastEditedByName: 'Flowy AI'
+              lastEditedByName: 'Haema AI'
             });
           }
         }
@@ -170,11 +170,11 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
     <div className="flex flex-col h-[calc(100vh-96px)] overflow-hidden relative font-display">
       <header className="flex items-center gap-5 bg-white/55 backdrop-blur-xl dark:bg-background-dark/55 px-7 pt-14 pb-5 border-b border-white/40 shrink-0 shadow-sm z-10 transition-all">
         <div className={`flex h-12 w-12 items-center justify-center rounded-[1.25rem] bg-white shadow-inner ${role === 'admin' ? 'text-emerald-500' : 'text-primary'}`}>
-          <FlowyIcon className="size-7" />
+          <HaemaIcon className="size-7" />
         </div>
         <div className="flex flex-col flex-1">
           <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
-            {role === 'admin' ? '관리자 AI 비서' : 'Flowy AI 가이드'}
+            {role === 'admin' ? '관리자 AI 비서' : 'Haema AI 가이드'}
           </h2>
           <span className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ${role === 'admin' ? 'text-emerald-500' : 'text-primary'}`}>
             {role === 'admin' ? 'Manual Architect Mode' : 'Knowledge Bank Mode'}
@@ -198,7 +198,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
             <div key={idx} className={`flex items-start gap-3.5 ${msg.role === 'user' ? 'justify-end' : ''}`}>
               {msg.role === 'model' && (
                 <div className={`h-9 w-9 rounded-xl bg-white shadow-inner flex items-center justify-center shrink-0 ${role === 'admin' ? 'text-emerald-500' : 'text-primary'}`}>
-                  <FlowyIcon className="size-6" />
+                  <HaemaIcon className="size-6" />
                 </div>
               )}
               <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end max-w-[85%]' : 'items-start max-w-[85%]'}`}>
@@ -240,7 +240,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
               <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce delay-75"></div>
               <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce delay-150"></div>
             </div>
-            <span className="text-[11px] text-primary/40 font-black italic uppercase tracking-widest">Flowy is Thinking...</span>
+            <span className="text-[11px] text-primary/40 font-black italic uppercase tracking-widest">Haema is Thinking...</span>
           </div>
         )}
       </main>

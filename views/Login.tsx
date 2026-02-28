@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { FlowyIcon } from '../components/Layout';
+import { HaemaIcon } from '../components/Layout';
 import { loginUser, registerUser, FirestoreUser } from '../services/authService';
 import { UserRole } from '../types';
 
@@ -94,9 +94,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="w-full max-w-md z-10">
         <div className="flex flex-col items-center mb-10 animate-fade-in">
           <div className="size-20 bg-white/85 backdrop-blur-md rounded-[2rem] flex items-center justify-center shadow-2xl shadow-blue-200/20 mb-6 border border-white">
-            <FlowyIcon className="size-12 animate-bounce-slow" />
+            <HaemaIcon className="size-12 animate-bounce-slow" />
           </div>
-          <h1 className="text-2xl font-black tracking-tighter text-slate-900 mb-1">FLOWY</h1>
+          <h1 className="text-2xl font-black tracking-tighter text-slate-900 mb-1">HAEMA</h1>
           <p className="text-slate-400 text-xs font-medium">학원 운영의 흐름을 바꾸다</p>
         </div>
 
@@ -269,7 +269,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <div className="text-center mt-8">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-              Flowy EDU System v2.0 · Firebase
+              Haema EDU System v2.0 · Firebase
             </p>
           </div>
         </div>

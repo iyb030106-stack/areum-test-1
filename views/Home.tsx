@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MANUAL_CATEGORIES } from '../constants';
-import { FlowyIcon } from '../components/Layout';
+import { HaemaIcon } from '../components/Layout';
 import { UserRole } from '../types';
 import {
   subscribeToAllManuals,
@@ -124,7 +124,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
     <div className="pb-40 min-h-screen relative">
 
       <header className="px-6 pt-14 pb-2 flex items-center justify-between relative z-10">
-        <h1 className="text-slate-800 dark:text-white text-xl font-black tracking-[0.15em] uppercase">FLOWY</h1>
+        <h1 className="text-slate-800 dark:text-white text-xl font-black tracking-[0.15em] uppercase">HAEMA</h1>
         <button
           onClick={handleOpenNoti}
           className="size-10 rounded-full bg-white/45 backdrop-blur-md flex items-center justify-center shadow-sm border border-white/40 hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-all active:scale-90 relative"
@@ -188,11 +188,11 @@ const Home: React.FC<HomeProps> = ({ role }) => {
               className="border-2 border-primary/20 bg-white/30 backdrop-blur-md p-8 rounded-[3rem] shadow-xl shadow-blue-100/20 flex items-center gap-6 active:scale-[0.98] transition-all group relative"
             >
               <div className="size-16 bg-white/85 backdrop-blur-md rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-blue-100/20 shrink-0 z-10 border border-white">
-                <FlowyIcon className="size-10" />
+                <HaemaIcon className="size-10" />
               </div>
               <div className="flex-1 z-10">
-                <h3 className="text-slate-800 dark:text-white text-xl font-black tracking-tight">Flowy</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mt-1.5 tracking-tight leading-relaxed">물어볼 곳이 필요할 때,<br />Flowy에게 도움을 요청하세요.</p>
+                <h3 className="text-slate-800 dark:text-white text-xl font-black tracking-tight">Haema</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mt-1.5 tracking-tight leading-relaxed">물어볼 곳이 필요할 때,<br />Haema에게 도움을 요청하세요.</p>
               </div>
               <div className="size-10 rounded-full bg-primary/5 flex items-center justify-center text-primary z-10">
                 <span className="material-symbols-outlined text-xl">arrow_forward</span>

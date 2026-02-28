@@ -3,19 +3,19 @@ import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { UserRole } from '../types';
 
-interface FlowyIconProps {
+interface HaemaIconProps {
   className?: string;
   color?: string;
 }
 
 /**
- * 구름 모양의 Flowy 캐릭터
+ * 구름 모양의 Haema 캐릭터
  * 연블루, 화이트, 연퍼플 그라데이션이 섞인 부드럽고 뚱뚱한 구름 + 정중앙 스마일 얼굴
  */
-export const FlowyIcon = ({ className = "" }: FlowyIconProps) => (
+export const HaemaIcon = ({ className = "" }: HaemaIconProps) => (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
     <defs>
-      <linearGradient id="flowyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <linearGradient id="haemaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#C7D2FE" />
         <stop offset="50%" stopColor="#FFFFFF" />
         <stop offset="100%" stopColor="#E9D5FF" />
@@ -25,7 +25,7 @@ export const FlowyIcon = ({ className = "" }: FlowyIconProps) => (
     {/* 구름 몸체 (더 뚱뚱하고 둥글둥글한 버전) */}
     <path
       d="M6 19c-3.314 0-6-2.686-6-6s2.686-6 6-6c.188 0 .372.01.553.028C7.684 4.015 10.61 2 14 2c4.418 0 8 3.582 8 8 0 .14-.004.28-.011.419C21.156 10.74 24 13.036 24 16c0 3.314-2.686 6-6 6H6v-3z"
-      fill="url(#flowyGradient)"
+      fill="url(#haemaGradient)"
       transform="translate(0, 0.5)"
     />
 
@@ -86,9 +86,9 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
 
           <NavLink to="/ai" className="flex flex-col items-center -mt-12 group">
             <div className={`size-16 rounded-[2.25rem] flex items-center justify-center shadow-2xl border-[1.5px] border-slate-200/80 dark:border-slate-700/80 active:scale-95 transition-all ${location.pathname === '/ai' ? 'bg-primary text-white shadow-primary/40' : 'bg-white text-slate-900 shadow-slate-200/50'}`}>
-              <FlowyIcon className="size-9" />
+              <HaemaIcon className="size-9" />
             </div>
-            <span className={`text-[10px] font-black mt-1.5 tracking-tighter ${location.pathname === '/ai' ? 'text-primary' : 'text-slate-400 opacity-50'}`}>Flowy</span>
+            <span className={`text-[10px] font-black mt-1.5 tracking-tighter ${location.pathname === '/ai' ? 'text-primary' : 'text-slate-400 opacity-50'}`}>Haema</span>
           </NavLink>
 
           <NavLink to="/announcements" className={({ isActive }) => `flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
