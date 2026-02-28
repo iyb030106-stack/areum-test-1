@@ -17,8 +17,8 @@ const QuickHelp: React.FC = () => {
   const categories = [
     { id: 'equipment', name: '멀티미디어 장애', icon: 'settings_alert', color: 'bg-primary/10 text-primary' },
     { id: 'facility', name: '학생 안전/부상', icon: 'medical_services', color: 'bg-red-100 text-red-600' },
-    { id: 'billing', name: '수강료 결제 오류', icon: 'payments', color: 'bg-amber-100 text-amber-600' },
-    { id: 'service', name: '학부모 불만 대응', icon: 'forum', color: 'bg-purple-100 text-purple-600' }
+    { id: 'billing', name: '수강료 결제 오류', icon: 'payments', color: 'bg-violet-100 text-violet-600' },
+    { id: 'service', name: '학부모 불만 대응', icon: 'forum', color: 'bg-indigo-100 text-indigo-600' }
   ];
 
   const filteredItems = selectedCatId

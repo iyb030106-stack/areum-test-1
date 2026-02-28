@@ -3,9 +3,9 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --color-primary: #3b82f6;
-  --color-background-light: #f8fafc;
-  --color-background-dark: #0f172a;
+  --color-primary: #0d9488;
+  --color-background-light: #f0fdfa;
+  --color-background-dark: #042f2e;
   --radius: 0.25rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;

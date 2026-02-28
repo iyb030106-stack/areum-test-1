@@ -139,7 +139,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
       <main className="px-6 pt-6 space-y-12 relative z-10">
         {/* Search Bar */}
         <div className="relative">
-          <div className={`flex items-center bg-white/55 backdrop-blur-xl dark:bg-slate-900/55 rounded-[2rem] border transition-all duration-300 shadow-xl shadow-blue-200/10 ${searchQuery ? 'border-primary ring-4 ring-primary/5' : 'border-white/60 dark:border-slate-800'}`}>
+          <div className={`flex items-center bg-white/55 backdrop-blur-xl dark:bg-slate-900/55 rounded-[2rem] border transition-all duration-300 shadow-xl shadow-teal-200/10 ${searchQuery ? 'border-primary ring-4 ring-primary/5' : 'border-white/60 dark:border-slate-800'}`}>
             <span className="material-symbols-outlined pl-5 text-slate-300">search</span>
             <input
               className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-5 px-3 font-bold dark:text-white"
@@ -168,7 +168,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
                       <div className="flex items-center gap-2">
                         <p className="text-[13px] font-black text-slate-800 dark:text-white">{item.title}</p>
                         {item.hasRecentUpdate && (
-                          <span className="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600/80 text-[9px] font-black uppercase tracking-tighter animate-pulse">UPDATED</span>
+                          <span className="px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-600/80 text-[9px] font-black uppercase tracking-tighter animate-pulse">UPDATED</span>
                         )}
                       </div>
                       <p className="text-[11px] text-slate-400 font-bold truncate mt-0.5 opacity-80">{item.description}</p>
@@ -185,9 +185,9 @@ const Home: React.FC<HomeProps> = ({ role }) => {
             {/* AI 가이드 카드 (Outlined Style) */}
             <div
               onClick={() => navigate('/ai')}
-              className="border-2 border-primary/20 bg-white/30 backdrop-blur-md p-8 rounded-[3rem] shadow-xl shadow-blue-100/20 flex items-center gap-6 active:scale-[0.98] transition-all group relative"
+              className="border-2 border-primary/20 bg-white/30 backdrop-blur-md p-8 rounded-[3rem] shadow-xl shadow-teal-100/20 flex items-center gap-6 active:scale-[0.98] transition-all group relative"
             >
-              <div className="size-16 bg-white/85 backdrop-blur-md rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-blue-100/20 shrink-0 z-10 border border-white">
+              <div className="size-16 bg-white/85 backdrop-blur-md rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-teal-100/20 shrink-0 z-10 border border-white">
                 <HaemaIcon className="size-10" />
               </div>
               <div className="flex-1 z-10">
@@ -307,7 +307,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
                       <div className="absolute -top-2 -right-2 flex gap-1 z-20">
                         <button
                           onClick={() => handleStartEdit(cat)}
-                          className="size-8 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg active:scale-90"
+                          className="size-8 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-lg active:scale-90"
                         >
                           <span className="material-symbols-outlined text-sm">edit</span>
                         </button>
@@ -369,7 +369,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
                     className="p-5 rounded-[2rem] bg-slate-50 dark:bg-slate-800/50 border border-transparent active:bg-primary/5 active:border-primary/20 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-2 mb-2.5">
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg leading-none ${noti.type === 'announcement' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg leading-none ${noti.type === 'announcement' ? 'bg-violet-100 text-violet-600' : 'bg-teal-100 text-teal-600'}`}>
                         {noti.type === 'announcement' ? '공지' : '매뉴얼'}
                       </span>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">

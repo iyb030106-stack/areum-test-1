@@ -98,7 +98,7 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
         {/* Q&A 배너 */}
         <div
           onClick={() => navigate('/faq')}
-          className="group relative overflow-hidden px-5 py-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl shadow-lg shadow-amber-200/20 cursor-pointer active:scale-[0.98] transition-all"
+          className="group relative overflow-hidden px-5 py-4 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-3xl shadow-lg shadow-indigo-200/20 cursor-pointer active:scale-[0.98] transition-all"
         >
           <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-110 transition-transform">
             <span className="material-symbols-outlined text-[60px] text-white">quiz</span>

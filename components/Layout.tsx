@@ -9,46 +9,14 @@ interface HaemaIconProps {
 }
 
 /**
- * 구름 모양의 Haema 캐릭터
- * 연블루, 화이트, 연퍼플 그라데이션이 섞인 부드럽고 뚱뚱한 구름 + 정중앙 스마일 얼굴
+ * 원장님이 제공해주신 실제 해마 이미지 캐릭터 아이콘
  */
 export const HaemaIcon = ({ className = "" }: HaemaIconProps) => (
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <defs>
-      <linearGradient id="haemaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#C7D2FE" />
-        <stop offset="50%" stopColor="#FFFFFF" />
-        <stop offset="100%" stopColor="#E9D5FF" />
-      </linearGradient>
-    </defs>
-
-    {/* 구름 몸체 (더 뚱뚱하고 둥글둥글한 버전) */}
-    <path
-      d="M6 19c-3.314 0-6-2.686-6-6s2.686-6 6-6c.188 0 .372.01.553.028C7.684 4.015 10.61 2 14 2c4.418 0 8 3.582 8 8 0 .14-.004.28-.011.419C21.156 10.74 24 13.036 24 16c0 3.314-2.686 6-6 6H6v-3z"
-      fill="url(#haemaGradient)"
-      transform="translate(0, 0.5)"
-    />
-
-    {/* 반짝임 (Sparkle) */}
-    <path
-      d="M19 5L19.2 5.8L20 6L19.2 6.2L19 7L18.8 6.2L18 6L18.8 5.8L19 5Z"
-      fill="white"
-      fillOpacity="0.9"
-    />
-
-    {/* 얼굴: 눈 (중앙 정렬 조정) */}
-    <circle cx="10" cy="12.5" r="0.8" fill="#334155" fillOpacity="0.85" />
-    <circle cx="16" cy="12.5" r="0.8" fill="#334155" fillOpacity="0.85" />
-
-    {/* 얼굴: 미소 (중앙 정렬 조정) */}
-    <path
-      d="M10 15.5C10 15.5 11.5 17 13 17C14.5 17 16 15.5 16 15.5"
-      stroke="#334155"
-      strokeWidth="1.2"
-      strokeLinecap="round"
-      strokeOpacity="0.85"
-    />
-  </svg>
+  <img
+    src="/haema_logo.png"
+    alt="Haema Logo"
+    className={`${className} object-contain`}
+  />
 );
 
 interface LayoutProps {
