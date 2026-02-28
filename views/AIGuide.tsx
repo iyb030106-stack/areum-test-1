@@ -30,6 +30,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
   const [showGuide, setShowGuide] = useState(false);
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const { messagesMap, isLoading, sendMessage, stopMessage, resetChat } = useChat();
   const messages = messagesMap[role] || [];
 
@@ -263,6 +264,15 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
     return null;
   };
 
+  const handleCopyText = (text: string, idx: number) => {
+    // JSON 블록 제외하고 텍스트만 복사
+    const textToCopy = text.replace(/```json\n[\s\S]*?\n```/, '').trim();
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setCopiedId(idx);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
   const renderMessageContent = (content: string) => {
     const textOnly = content.replace(/```json\n[\s\S]*?\n```/, '').trim();
     const parts = textOnly.split(/(\*\*.*?\*\*)/g);
@@ -350,11 +360,21 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
                   </div>
                 )}
                 <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end max-w-[82%]' : 'items-start max-w-[82%]'}`}>
-                  <div className={`rounded-[1.5rem] px-5 py-3.5 text-[14px] leading-relaxed tracking-normal whitespace-pre-wrap ${msg.role === 'user'
+                  <div className={`group relative rounded-[1.5rem] px-5 py-3.5 text-[14px] leading-relaxed tracking-normal whitespace-pre-wrap ${msg.role === 'user'
                     ? 'rounded-tr-sm bg-slate-900 text-white font-medium dark:bg-slate-100 dark:text-slate-900'
                     : 'rounded-tl-sm bg-slate-50 dark:bg-slate-800/70 text-slate-800 dark:text-white border border-slate-100 dark:border-slate-700 font-medium'
                     }`}>
                     {renderMessageContent(msg.content)}
+
+                    {/* 복사 버튼 */}
+                    <button
+                      onClick={() => handleCopyText(msg.content, idx)}
+                      className={`absolute bottom-2 right-2 p-1.5 rounded-lg bg-white/50 backdrop-blur-sm shadow-sm transition-all opacity-0 group-hover:opacity-100 active:scale-90 ${copiedId === idx ? 'text-emerald-500 opacity-100' : 'text-slate-400'}`}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">
+                        {copiedId === idx ? 'check' : 'content_copy'}
+                      </span>
+                    </button>
 
                     {jsonContent && (() => {
                       let parsedType = 'UNKNOWN';

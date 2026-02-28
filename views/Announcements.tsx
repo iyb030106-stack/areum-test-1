@@ -92,24 +92,6 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
       </header>
 
       <main className="px-6 pt-8 space-y-6 relative z-10">
-        {/* Q&A 배너 */}
-        <div
-          onClick={() => navigate('/faq')}
-          className="group relative overflow-hidden px-5 py-4 bg-slate-800 dark:bg-slate-900 rounded-3xl shadow-lg shadow-slate-200/10 cursor-pointer active:scale-[0.98] transition-all"
-        >
-          <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-110 transition-transform">
-            <span className="material-symbols-outlined text-[60px] text-white">quiz</span>
-          </div>
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <h4 className="text-white font-black text-[15px] mb-0.5 flex items-center gap-2">
-                업무가 궁금하신가요?
-              </h4>
-              <p className="text-white/80 text-[10px] font-bold">신입/기존 보직자용 자주 묻는 질문(Q&A)</p>
-            </div>
-            <span className="material-symbols-outlined text-white/50 group-hover:text-white transition-colors">arrow_forward</span>
-          </div>
-        </div>
 
         {filteredUpdates.length > 0 ? (
           filteredUpdates.map((update) => (
