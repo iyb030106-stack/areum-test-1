@@ -30,17 +30,21 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
   const [showGuide, setShowGuide] = useState(false);
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const { messagesMap, isLoading, sendMessage, stopMessage, resetChat } = useChat();
   const messages = messagesMap[role] || [];
 
   useEffect(() => {
+    // 진입 시 대화 자동 초기화
+    resetChat(role);
+
     const unsubCats = subscribeToCategories(setCategories);
     const unsubItems = subscribeToAllManuals(setManuals);
     return () => {
       unsubCats();
       unsubItems();
     };
-  }, []);
+  }, [role, resetChat]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -263,6 +267,15 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
     return null;
   };
 
+  const handleCopyText = (text: string, idx: number) => {
+    // JSON 블록 제외하고 텍스트만 복사
+    const textToCopy = text.replace(/```json\n[\s\S]*?\n```/, '').trim();
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setCopiedId(idx);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
   const renderMessageContent = (content: string) => {
     const textOnly = content.replace(/```json\n[\s\S]*?\n```/, '').trim();
     const parts = textOnly.split(/(\*\*.*?\*\*)/g);
@@ -352,56 +365,64 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
       )}
 
       {/* ── 채팅 뷰 (대화 시작 후) ── */}
-      {
-        !isLandingView && (
-          <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-6 no-scrollbar relative z-10">
-            {messages.map((msg, idx) => {
-              const jsonContent = msg.role === 'model' ? extractJson(msg.content) : null;
-              return (
-                <div key={idx} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                  {msg.role === 'model' && (
-                    <div className={`size-8 rounded-xl flex items-center justify-center shrink-0 border ${role === 'admin' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
-                      <img src="/haema_logo.png" alt="AI" className="size-5 object-contain haema-flip" />
-                    </div>
-                  )}
-                  <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end max-w-[82%]' : 'items-start max-w-[82%]'}`}>
-                    <div className={`rounded-[1.5rem] px-5 py-3.5 text-[14px] leading-relaxed tracking-normal whitespace-pre-wrap ${msg.role === 'user'
-                      ? 'rounded-tr-sm bg-slate-900 text-white font-medium dark:bg-slate-100 dark:text-slate-900'
-                      : 'rounded-tl-sm bg-slate-50 dark:bg-slate-800/70 text-slate-800 dark:text-white border border-slate-100 dark:border-slate-700 font-medium'
-                      }`}>
-                      {renderMessageContent(msg.content)}
+      {!isLandingView && (
+        <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-6 no-scrollbar relative z-10">
+          {messages.map((msg, idx) => {
+            const jsonContent = msg.role === 'model' ? extractJson(msg.content) : null;
+            return (
+              <div key={idx} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                {msg.role === 'model' && (
+                  <div className={`size-8 rounded-xl flex items-center justify-center shrink-0 border ${role === 'admin' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+                    <img src="/haema_logo.png" alt="AI" className="size-5 object-contain haema-flip" />
+                  </div>
+                )}
+                <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end max-w-[82%]' : 'items-start max-w-[82%]'}`}>
+                  <div className={`group relative rounded-[1.5rem] px-5 py-3.5 text-[14px] leading-relaxed tracking-normal whitespace-pre-wrap ${msg.role === 'user'
+                    ? 'rounded-tr-sm bg-slate-900 text-white font-medium dark:bg-slate-100 dark:text-slate-900'
+                    : 'rounded-tl-sm bg-slate-50 dark:bg-slate-800/70 text-slate-800 dark:text-white border border-slate-100 dark:border-slate-700 font-medium'
+                    }`}>
+                    {renderMessageContent(msg.content)}
 
-                      {jsonContent && (() => {
-                        let parsedType = 'UNKNOWN';
-                        try { parsedType = JSON.parse(jsonContent).requestType || 'UNKNOWN'; } catch { }
-                        const isCreate = parsedType === 'STRUCTURE_MANUAL';
-                        const isUpdate = parsedType === 'UPDATE_MANUAL';
-                        const isDelete = parsedType === 'DELETE_MANUAL';
-                        const isDeleteCat = parsedType === 'DELETE_CATEGORY';
-                        const labelText = isCreate ? '매뉴얼 생성 준비됨' : isUpdate ? '매뉴얼 수정 준비됨' : isDelete ? '매뉴얼 삭제 준비됨' : isDeleteCat ? '카테고리 전체 삭제 준비됨' : '작업 준비됨';
-                        const btnColor = (isDelete || isDeleteCat) ? 'bg-red-500 hover:bg-red-600' : isUpdate ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600';
-                        const iconColor = (isDelete || isDeleteCat) ? 'text-red-400' : isUpdate ? 'text-amber-400' : 'text-emerald-400';
-                        const btnText = isCreate ? '즉시 생성하기' : isUpdate ? '즉시 수정하기' : (isDelete || isDeleteCat) ? '즉시 삭제하기' : '즉시 적용하기';
-                        return (
-                          <div className="mt-2 px-3 py-2 rounded-xl bg-slate-900 text-white space-y-1.5">
-                            <div className="flex items-center gap-1.5">
-                              <span className={`material-symbols-outlined ${iconColor} text-xs`}>
-                                {isDelete ? 'delete' : isUpdate ? 'edit' : 'auto_awesome'}
-                              </span>
-                              <span className={`text-[9px] font-black ${iconColor} uppercase tracking-widest`}>{labelText}</span>
-                            </div>
-                            <button
-                              onClick={() => handleApplyStructure(jsonContent)}
-                              disabled={isApplying}
-                              className={`w-full py-1.5 ${isApplying ? 'bg-slate-600' : btnColor} text-white rounded-lg text-[10px] font-black transition-all active:scale-95 flex items-center justify-center gap-1.5`}
-                            >
-                              {isApplying && <div className="size-2.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
-                              {isApplying ? '처리 중...' : btnText}
-                            </button>
+                    {/* 복사 버튼 */}
+                    <button
+                      onClick={() => handleCopyText(msg.content, idx)}
+                      className={`absolute bottom-2 right-2 p-1.5 rounded-lg bg-white/50 backdrop-blur-sm shadow-sm transition-all opacity-0 group-hover:opacity-100 active:scale-90 ${copiedId === idx ? 'text-emerald-500 opacity-100' : 'text-slate-400'}`}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">
+                        {copiedId === idx ? 'check' : 'content_copy'}
+                      </span>
+                    </button>
+
+                    {jsonContent && (() => {
+                      let parsedType = 'UNKNOWN';
+                      try { parsedType = JSON.parse(jsonContent).requestType || 'UNKNOWN'; } catch { }
+                      const isCreate = parsedType === 'STRUCTURE_MANUAL';
+                      const isUpdate = parsedType === 'UPDATE_MANUAL';
+                      const isDelete = parsedType === 'DELETE_MANUAL';
+                      const isDeleteCat = parsedType === 'DELETE_CATEGORY';
+                      const labelText = isCreate ? '매뉴얼 생성 준비됨' : isUpdate ? '매뉴얼 수정 준비됨' : isDelete ? '매뉴얼 삭제 준비됨' : isDeleteCat ? '카테고리 전체 삭제 준비됨' : '작업 준비됨';
+                      const btnColor = (isDelete || isDeleteCat) ? 'bg-red-500 hover:bg-red-600' : isUpdate ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600';
+                      const iconColor = (isDelete || isDeleteCat) ? 'text-red-400' : isUpdate ? 'text-amber-400' : 'text-emerald-400';
+                      const btnText = isCreate ? '즉시 생성하기' : isUpdate ? '즉시 수정하기' : (isDelete || isDeleteCat) ? '즉시 삭제하기' : '즉시 적용하기';
+                      return (
+                        <div className="mt-2 px-3 py-2 rounded-xl bg-slate-900 text-white space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`material-symbols-outlined ${iconColor} text-xs`}>
+                              {isDelete ? 'delete' : isUpdate ? 'edit' : 'auto_awesome'}
+                            </span>
+                            <span className={`text-[9px] font-black ${iconColor} uppercase tracking-widest`}>{labelText}</span>
                           </div>
-                        );
-                      })()}
-                    </div>
+                          <button
+                            onClick={() => handleApplyStructure(jsonContent)}
+                            className={`w-full py-2.5 rounded-xl text-[11px] font-black text-white shadow-lg active:scale-95 transition-all ${btnColor}`}
+                            disabled={isApplying}
+                          >
+                            {isApplying ? '처리 중...' : btnText}
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
                     <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
                   </div>
                 </div>
@@ -437,7 +458,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
           {/* 텍스트 입력 */}
           <input
             className="flex-1 bg-transparent border-none focus:ring-0 text-[14px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
-            placeholder={role === 'admin' ? '매뉴얼 관리를 요청해보세요...' : '무엇이든 물어보세요...'}
+            placeholder="업무 방법이 궁금하면 HAEMA에게 물어보세요"
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}

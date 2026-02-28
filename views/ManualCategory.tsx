@@ -100,13 +100,6 @@ const ManualCategory: React.FC<ManualCategoryProps> = ({ role }) => {
           </div>
         )}
 
-        <button
-          onClick={() => navigate('/home')}
-          className="mt-6 flex w-full items-center justify-center gap-3 rounded-[2rem] border-2 border-primary/20 bg-white/55 backdrop-blur-md dark:bg-slate-800/55 p-5 active:scale-95 group transition-all hover:bg-primary/5"
-        >
-          <span className="material-symbols-outlined text-primary fill-1">chat</span>
-          <span className="text-base font-black text-primary">도움이 더 필요한가요?</span>
-        </button>
       </main>
     </div>
   );

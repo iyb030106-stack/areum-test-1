@@ -23,6 +23,7 @@ export interface ManualCategory {
   colorClass: string;
   bgClass: string;
   type?: 'admin' | 'subject';
+  order?: number;
 }
 
 export interface ManualItem {

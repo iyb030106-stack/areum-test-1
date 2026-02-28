@@ -18,7 +18,7 @@ export interface Announcement {
     id: string;
     title: string;
     description: string;
-    category: '필독' | '일반';
+    category: string;
     isImportant: boolean;
     authorId: string;
     authorName: string;
@@ -27,6 +27,55 @@ export interface Announcement {
     createdAt: Timestamp | null;
     updatedAt: Timestamp | null;
 }
+
+export interface NoticeCategory {
+    id: string;
+    name: string;
+    order: number;
+    createdAt?: Timestamp;
+}
+
+/** 공지사항 카테고리 실시간 구독 */
+export const subscribeToNoticeCategories = (
+    callback: (items: NoticeCategory[]) => void,
+): (() => void) => {
+    const q = query(collection(db, 'notice_categories'), orderBy('order', 'asc'));
+    return onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as NoticeCategory[];
+        callback(items);
+    });
+};
+
+/** 공지사항 카테고리 생성 */
+export const createNoticeCategory = async (name: string, order: number): Promise<string> => {
+    const ref = await addDoc(collection(db, 'notice_categories'), {
+        name,
+        order,
+        createdAt: serverTimestamp(),
+    });
+    return ref.id;
+};
+
+/** 공지사항 카테고리 수정 */
+export const updateNoticeCategory = async (id: string, name: string): Promise<void> => {
+    await updateDoc(doc(db, 'notice_categories', id), { name });
+};
+
+/** 공지사항 카테고리 삭제 */
+export const deleteNoticeCategory = async (id: string): Promise<void> => {
+    await deleteDoc(doc(db, 'notice_categories', id));
+};
+
+/** 초기 카테고리 설정 (필요시) */
+export const initializeNoticeCategoriesIfNeeded = async (initialNames: string[]): Promise<void> => {
+    const q = query(collection(db, 'notice_categories'));
+    const snap = await import('firebase/firestore').then(({ getDocs }) => getDocs(q));
+    if (snap.empty) {
+        for (let i = 0; i < initialNames.length; i++) {
+            await createNoticeCategory(initialNames[i], i);
+        }
+    }
+};
 
 /** 공지사항 목록 실시간 구독 */
 export const subscribeToAnnouncements = (

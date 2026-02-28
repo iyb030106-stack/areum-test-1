@@ -52,17 +52,16 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
             <span className="text-[10px] font-black tracking-tighter">매뉴얼</span>
           </NavLink>
 
+          <NavLink to="/announcements" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
+            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/announcements' ? 'fill-1' : ''}`}>campaign</span>
+            <span className="text-[10px] font-black tracking-tighter">공지 사항</span>
+          </NavLink>
+
           <NavLink to="/faq" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
             <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/faq' ? 'fill-1' : ''}`}>quiz</span>
             <span className="text-[10px] font-black tracking-tighter">Q&A</span>
           </NavLink>
 
-
-
-          <NavLink to="/announcements" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
-            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/announcements' ? 'fill-1' : ''}`}>campaign</span>
-            <span className="text-[10px] font-black tracking-tighter">공지 사항</span>
-          </NavLink>
 
           <NavLink to="/mypage" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
             <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/mypage' ? 'fill-1' : ''}`}>person</span>
