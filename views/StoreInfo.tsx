@@ -164,29 +164,25 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
       <header className="sticky top-0 z-20 flex items-center bg-white/55 dark:bg-slate-900/55 backdrop-blur-xl px-4 pt-14 pb-4 border-b border-white/40 dark:border-slate-800 justify-center">
         <h2 className="text-slate-900 dark:text-white text-xl font-black tracking-tight">내 정보</h2>
         <button
-          onClick={toggleTheme}
-          className="absolute right-4 bottom-3 size-10 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-amber-400 active:scale-90 transition-all z-30 shadow-sm"
+          onClick={() => navigate('/settings')}
+          className="absolute right-4 bottom-3 size-10 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 active:scale-90 transition-all z-30 shadow-sm"
         >
-          <span className="material-symbols-outlined text-[20px] fill-1">
-            {isDarkMode ? 'light_mode' : 'dark_mode'}
+          <span className="material-symbols-outlined text-[22px]">
+            settings
           </span>
         </button>
       </header>
 
       {/* 프로필 카드 */}
       <div className="px-5 pt-6 pb-2">
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#202020] to-slate-800 rounded-[2.5rem] p-6 shadow-2xl shadow-slate-200/10">
-          {/* 배경 장식 */}
-          <div className="absolute -top-8 -right-8 size-32 bg-white/10 rounded-full" />
-          <div className="absolute -bottom-6 -left-4 size-24 bg-white/5 rounded-full" />
-
+        <div className="relative overflow-hidden bg-white/70 backdrop-blur-xl border border-white rounded-[2.5rem] p-6 shadow-xl shadow-slate-200/40 dark:bg-slate-800/50 dark:border-slate-700">
           <div className="relative flex items-center gap-5">
             {/* 아바타 */}
-            <div className={`relative size-[60px] rounded-[1.5rem] ${currentUser.avatarColor || 'bg-white/20'} flex items-center justify-center shrink-0 shadow-lg border-2 border-white/30 overflow-hidden`}>
+            <div className={`relative size-[60px] rounded-[1.5rem] ${currentUser.avatarColor || 'bg-slate-100'} flex items-center justify-center shrink-0 shadow-sm border-2 border-white dark:border-slate-700 overflow-hidden`}>
               {currentUser.avatarUrl ? (
                 <img src={currentUser.avatarUrl} alt="profile" className="w-full h-full object-cover" />
               ) : (
-                <span className={`text-2xl font-black ${currentUser.avatarTextColor || 'text-white'}`}>
+                <span className={`text-2xl font-black ${currentUser.avatarTextColor || 'text-slate-400'}`}>
                   {currentUser.initial || currentUser.name?.[0] || '?'}
                 </span>
               )}
@@ -194,32 +190,25 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
 
             {/* 이름/직책 */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <p className="text-[11px] font-black text-white/60 uppercase tracking-widest">
-                  {role === 'admin' ? '관리자' : '직원'}
-                </p>
-                <button
-                  onClick={() => setIsEditingProfile(true)}
-                  className="bg-white/20 hover:bg-white/30 text-white text-[10px] px-2 py-0.5 rounded-full font-bold transition-colors"
-                >
-                  수정
-                </button>
-              </div>
-              <h2 className="text-xl font-black text-white tracking-tight">
-                {currentUser.name}님 👋
-              </h2>
-              <p className="text-[11px] text-white/70 font-bold mt-0.5">
-                {currentUser.position}{currentUser.subject ? ` · ${currentUser.subject}` : ''}
+              <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1.5">
+                {(() => {
+                  const roleName = role === 'admin' ? '관리자' : '직원';
+                  const pos = currentUser.position || '';
+                  const base = (pos === roleName || !pos) ? roleName : `${roleName} ${pos}`;
+                  return currentUser.subject ? `${base} · ${currentUser.subject}` : base;
+                })()}
               </p>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                {currentUser.name}님
+              </h2>
             </div>
 
-            {/* 로그아웃 */}
+            {/* 로그아웃 대신 수정 아이콘 */}
             <button
-              onClick={handleLogoutClick}
-              className="shrink-0 flex items-center gap-1 bg-white/15 hover:bg-white/25 border border-white/20 px-3 py-2 rounded-xl transition-all active:scale-95"
+              onClick={() => setIsEditingProfile(true)}
+              className="size-9 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 flex items-center justify-center shadow-lg active:scale-90 transition-all shrink-0"
             >
-              <span className="material-symbols-outlined text-white text-[16px]">logout</span>
-              <span className="text-white text-[10px] font-black">로그아웃</span>
+              <span className="material-symbols-outlined text-[18px]">edit</span>
             </button>
           </div>
         </div>

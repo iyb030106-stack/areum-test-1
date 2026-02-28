@@ -16,7 +16,7 @@ import AnnouncementDetail from './views/AnnouncementDetail';
 import Login from './views/Login';
 import AdminDashboard from './views/AdminDashboard';
 import AdminStaff from './views/AdminStaff';
-import AdminSettings from './views/AdminSettings';
+import Settings from './views/Settings';
 import ManualEdit from './views/ManualEdit';
 import AnnouncementEdit from './views/AnnouncementEdit';
 import MyActivityDetail from './views/MyActivityDetail';
@@ -29,20 +29,42 @@ import { MANUAL_CATEGORIES } from './constants';
 import { initializeCategoriesIfNeeded } from './services/manualService';
 
 const SplashScreen = () => (
-  <div className="animate-splash-fade-out relative flex min-h-screen w-full max-w-md mx-auto flex-col items-center justify-center overflow-hidden bg-[#141414]">
+  <div className="animate-splash-fade-out relative flex min-h-screen w-full max-w-md mx-auto flex-col items-center justify-center overflow-hidden bg-[#010309]">
+    {/* 오묘한 다층 그라데이션 레이어 */}
+    <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(30,58,138,0.15)_0%,transparent_70%)]"></div>
+      <div className="absolute top-[-20%] left-[-10%] size-[120%] bg-[radial-gradient(circle_at_20%_20%,rgba(30,58,138,0.1)_0%,transparent_50%)]"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] size-[120%] bg-[radial-gradient(circle_at_80%_80%,rgba(88,28,135,0.05)_0%,transparent_50%)]"></div>
+    </div>
+
     {/* 배경 ripple 효과 */}
     <div className="absolute size-80 rounded-full border border-white/5 animate-ripple" style={{ animationDelay: '0s' }} />
     <div className="absolute size-80 rounded-full border border-white/5 animate-ripple" style={{ animationDelay: '0.8s' }} />
-    <div className="absolute size-80 rounded-full border border-white/5 animate-ripple" style={{ animationDelay: '1.6s' }} />
 
-    {/* 배경 블롭 */}
-    <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[40%] bg-slate-700/20 rounded-full blur-[120px]" />
-    <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[40%] bg-slate-600/15 rounded-full blur-[100px]" />
+    {/* 심해 거품 애니메이션 */}
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[...Array(8)].map((_, i) => (
+        <div 
+          key={i}
+          className="bubble-anim absolute border border-white/20 bg-white/5 rounded-full"
+          style={{ 
+            width: `${8 + (i * 4)}px`, 
+            height: `${8 + (i * 4)}px`,
+            left: `${(i * 15) % 100}%`,
+            top: '100%',
+            animationDelay: `${i * 1.2}s`,
+            animationDuration: `${6 + (i % 3) * 2}s, 3s`
+          }} 
+        />
+      ))}
+    </div>
 
     {/* 로고 영역 */}
     <div className="flex flex-col items-center gap-8 z-10">
-      {/* 해마 아이콘 */}
-      <img src="/haema_logo.png" alt="HAEMA" className="size-40 object-contain drop-shadow-2xl haema-flip animate-float" />
+      {/* 해마 아이콘 (이동 애니메이션과 충돌 방지를 위해 래퍼에서 반전 적용) */}
+      <div className="haema-flip">
+        <img src="/haema_logo.png" alt="HAEMA" className="size-40 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.15)] animate-float" />
+      </div>
 
       {/* 브랜드 텍스트 */}
       <div className="flex flex-col items-center gap-2">
@@ -58,11 +80,11 @@ const SplashScreen = () => (
     {/* 하단 로딩 바 */}
     <div className="absolute bottom-20 left-12 right-12 z-10">
       <div className="h-[2px] w-full bg-white/10 rounded-full overflow-hidden">
-        <div className="h-full bg-gradient-to-r from-white/20 via-white to-white/20 rounded-full animate-bar-fill relative overflow-hidden">
-          <div className="absolute inset-y-0 w-8 bg-white/60 blur-sm animate-shimmer" />
+        <div className="h-full bg-gradient-to-r from-white/10 via-white/50 to-white/10 rounded-full animate-bar-fill relative overflow-hidden">
+          <div className="absolute inset-y-0 w-8 bg-white/20 blur-sm animate-shimmer" />
         </div>
       </div>
-      <p className="mt-4 text-center text-[10px] font-bold text-white/25 uppercase tracking-widest animate-splash-text" style={{ animationDelay: '0.7s', opacity: 0 }}>
+      <p className="mt-4 text-center text-[10px] font-bold text-white/20 uppercase tracking-widest animate-splash-text" style={{ animationDelay: '0.7s', opacity: 0 }}>
         Powered by Areum Edu Partners
       </p>
     </div>
@@ -164,10 +186,11 @@ const App: React.FC = () => {
             <Route path="/manuals/:catId/:taskId" element={<TaskDetail role={role} currentUser={currentUser} />} />
             <Route path="/manuals/:catId/:taskId/edit" element={<ManualEdit />} />
 
+            <Route path="/settings" element={<Settings role={role} onLogout={handleLogout} />} />
+
             {role === 'admin' && (
               <>
                 <Route path="/admin/staff" element={<AdminStaff />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
               </>
             )}
 
