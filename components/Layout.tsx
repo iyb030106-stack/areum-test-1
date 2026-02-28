@@ -30,11 +30,11 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col max-w-md mx-auto bg-[#F5F8FF] dark:bg-slate-950 shadow-2xl overflow-hidden border-x border-slate-100 dark:border-slate-800 font-display">
-      {/* Watercolor Blobs - Global Background */}
-      <div className="absolute top-[-5%] left-[-10%] w-[80%] h-[40%] bg-blue-300/45 rounded-full blur-[120px] pointer-events-none z-0"></div>
-      <div className="absolute top-[15%] right-[-15%] w-[70%] h-[35%] bg-purple-200/45 rounded-full blur-[100px] pointer-events-none z-0"></div>
-      <div className="absolute bottom-[25%] left-[-5%] w-[60%] h-[30%] bg-emerald-100/45 rounded-full blur-[110px] pointer-events-none z-0"></div>
+    <div className="relative flex min-h-screen w-full flex-col max-w-md mx-auto bg-slate-50 dark:bg-slate-950 shadow-2xl overflow-hidden border-x border-slate-100 dark:border-slate-800 font-display">
+      {/* Grayscale Blobs - Global Background */}
+      <div className="absolute top-[-5%] left-[-10%] w-[80%] h-[40%] bg-slate-200/40 rounded-full blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute top-[15%] right-[-15%] w-[70%] h-[35%] bg-slate-100/40 rounded-full blur-[100px] pointer-events-none z-0"></div>
+      <div className="absolute bottom-[25%] left-[-5%] w-[60%] h-[30%] bg-slate-200/30 rounded-full blur-[110px] pointer-events-none z-0"></div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar relative z-10">
         {children}
@@ -44,12 +44,12 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
         <div className="flex items-end justify-between">
           <NavLink to="/" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
             <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/' ? 'fill-1' : ''}`}>grid_view</span>
-            <span className="text-[10px] font-black tracking-tighter">업무 가이드</span>
+            <span className="text-[10px] font-black tracking-tighter">운영 매뉴얼</span>
           </NavLink>
 
-          <NavLink to="/announcements" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
-            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/announcements' ? 'fill-1' : ''}`}>campaign</span>
-            <span className="text-[10px] font-black tracking-tighter">공지사항</span>
+          <NavLink to="/subject-manuals" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
+            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/subject-manuals' ? 'fill-1' : ''}`}>menu_book</span>
+            <span className="text-[10px] font-black tracking-tighter">운영 노하우</span>
           </NavLink>
 
           <NavLink to="/ai" className="flex-1 flex flex-col items-center -mt-12 group">
@@ -59,9 +59,9 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
             <span className={`text-[10px] font-black mt-1.5 tracking-tighter ${location.pathname === '/ai' ? 'text-primary' : 'text-slate-400 opacity-50'}`}>Haema</span>
           </NavLink>
 
-          <NavLink to="/chat" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
-            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/chat' ? 'fill-1' : ''}`}>chat_bubble_outline</span>
-            <span className="text-[10px] font-black tracking-tighter">채팅</span>
+          <NavLink to="/announcements" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
+            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/announcements' ? 'fill-1' : ''}`}>campaign</span>
+            <span className="text-[10px] font-black tracking-tighter">공지 사항</span>
           </NavLink>
 
           <NavLink to="/mypage" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>

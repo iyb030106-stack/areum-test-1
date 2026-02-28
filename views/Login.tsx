@@ -88,8 +88,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   return (
     <div className="min-h-full bg-slate-50 flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden">
       {/* Background Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[60%] aspect-square bg-blue-400/10 rounded-full blur-[100px] animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] aspect-square bg-emerald-400/10 rounded-full blur-[100px] animate-pulse delay-1000" />
+      <div className="absolute top-[-10%] left-[-10%] w-[60%] aspect-square bg-slate-400/10 rounded-full blur-[100px] animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] aspect-square bg-slate-300/10 rounded-full blur-[100px] animate-pulse delay-1000" />
 
       <div className="w-full max-w-md z-10">
         <div className="flex flex-col items-center mb-10 animate-fade-in">
@@ -112,8 +112,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     onClick={() => handleRoleSelect('admin')}
                     className="group flex items-center gap-5 p-5 rounded-3xl bg-white/40 border border-white/80 text-slate-800 hover:bg-white/60 transition-all active:scale-[0.98] shadow-sm"
                   >
-                    <div className="size-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-2xl text-indigo-500">admin_panel_settings</span>
+                    <div className="size-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-2xl text-slate-700">admin_panel_settings</span>
                     </div>
                     <div className="flex-1 text-left">
                       <p className="font-black text-base">관리자 로그인</p>
@@ -126,8 +126,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     onClick={() => handleRoleSelect('staff')}
                     className="group flex items-center gap-5 p-5 rounded-3xl bg-white/40 border border-white/80 text-slate-800 hover:bg-white/60 transition-all active:scale-[0.98] shadow-sm"
                   >
-                    <div className="size-12 rounded-2xl bg-blue-50 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-2xl text-blue-500">badge</span>
+                    <div className="size-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-2xl text-slate-700">badge</span>
                     </div>
                     <div className="flex-1 text-left">
                       <p className="font-black text-base">직원 로그인</p>

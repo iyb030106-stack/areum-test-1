@@ -98,17 +98,16 @@ const SubjectManuals: React.FC<SubjectManualsProps> = ({ role }) => {
 
   return (
     <div className="pb-40 min-h-screen relative">
-      <header className="px-6 pt-14 pb-10 relative z-10">
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="size-2 bg-rose-500 rounded-full animate-pulse shadow-sm shadow-rose-500/50"></span>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">학습 허브</p>
+      <header className="px-6 pt-14 pb-2 flex items-center justify-between relative z-10">
+        <div>
+          <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+          <p className="text-sm font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mt-1.5">운영 노하우</p>
         </div>
-        <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">수업 가이드</h1>
       </header>
 
       <main className="px-6 space-y-10 relative z-10">
         <div className="relative">
-          <div className={`flex items-center bg-white/55 backdrop-blur-xl dark:bg-slate-900/55 rounded-[1.75rem] border transition-all duration-300 shadow-xl shadow-blue-200/10 ${searchQuery ? 'border-primary ring-4 ring-primary/5' : 'border-white/60 dark:border-slate-800'}`}>
+          <div className={`flex items-center bg-white/55 backdrop-blur-xl dark:bg-slate-900/55 rounded-[1.75rem] border transition-all duration-300 shadow-xl shadow-slate-100/5 ${searchQuery ? 'border-primary ring-4 ring-primary/5' : 'border-white/60 dark:border-slate-800'}`}>
             <span className="material-symbols-outlined pl-5 text-slate-300">search</span>
             <input
               className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-4.5 px-3 font-bold dark:text-white"
@@ -278,7 +277,7 @@ const SubjectManuals: React.FC<SubjectManualsProps> = ({ role }) => {
           </section>
         )}
       </main>
-    </div>
+    </div >
   );
 };
 

@@ -162,7 +162,7 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
 
       {/* 헤더 */}
       <header className="sticky top-0 z-20 flex items-center bg-white/55 dark:bg-slate-900/55 backdrop-blur-xl px-4 pt-14 pb-4 border-b border-white/40 dark:border-slate-800 justify-center">
-        <h2 className="text-slate-900 dark:text-white text-lg font-bold">내 정보</h2>
+        <h2 className="text-slate-900 dark:text-white text-xl font-black tracking-tight">내 정보</h2>
         <button
           onClick={toggleTheme}
           className="absolute right-4 bottom-3 size-10 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-amber-400 active:scale-90 transition-all z-30 shadow-sm"
@@ -175,7 +175,7 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
 
       {/* 프로필 카드 */}
       <div className="px-5 pt-6 pb-2">
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/90 to-indigo-600 rounded-[2.5rem] p-6 shadow-2xl shadow-primary/20">
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#202020] to-slate-800 rounded-[2.5rem] p-6 shadow-2xl shadow-slate-200/10">
           {/* 배경 장식 */}
           <div className="absolute -top-8 -right-8 size-32 bg-white/10 rounded-full" />
           <div className="absolute -bottom-6 -left-4 size-24 bg-white/5 rounded-full" />
@@ -402,58 +402,6 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
 
 
 
-        <section>
-          <div className="flex items-center gap-4 mb-6 px-1">
-            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap">Academy Info</h3>
-            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"></div>
-          </div>
-          <div className="space-y-4">
-            {/* 학원 기본 정보 */}
-            <div className="p-6 bg-white/55 backdrop-blur-md dark:bg-slate-800/55 rounded-[2rem] border border-white/40 dark:border-slate-700 shadow-sm">
-              <div className="flex items-center gap-4 mb-5">
-                <div className="bg-white shadow-inner size-14 rounded-3xl flex items-center justify-center">
-                  <span className="material-symbols-outlined text-2xl text-slate-600">school</span>
-                </div>
-                <div>
-                  <p className="font-black text-sm text-slate-900 dark:text-white leading-tight">학원 식별 정보</p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Academy Identification</p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center bg-white/55 dark:bg-slate-900/55 p-3 rounded-xl border border-white/20">
-                  <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider">ACA 학원번호</span>
-                  <span className="text-xs font-black text-primary tracking-tight">ACA-2024-0815</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 네트워크 및 기기 정보 */}
-            <div className="p-6 bg-white/55 backdrop-blur-md dark:bg-slate-800/55 rounded-[2rem] border border-white/40 dark:border-slate-700 shadow-sm">
-              <div className="flex items-center gap-4 mb-5">
-                <div className="bg-white shadow-inner size-14 rounded-3xl flex items-center justify-center">
-                  <span className="material-symbols-outlined text-2xl text-slate-600">settings_input_component</span>
-                </div>
-                <div>
-                  <p className="font-black text-sm text-slate-900 dark:text-white leading-tight">네트워크 및 기기 설정</p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Network & Devices</p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center bg-white/55 dark:bg-slate-900/55 p-3 rounded-xl border border-white/20">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Wi-Fi</span>
-                    <span className="text-[9px] text-slate-400 font-bold">SSID: School_Guest</span>
-                  </div>
-                  <span className="text-xs font-black text-slate-900 dark:text-white tracking-tight">wifi-pass-99!</span>
-                </div>
-                <div className="flex justify-between items-center bg-white/55 dark:bg-slate-900/55 p-3 rounded-xl border border-white/20">
-                  <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider">프린트 연결 번호</span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white tracking-tight">#4409</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Delete Account Section */}
         <section className="pt-4 pb-10 px-1 flex flex-col items-center gap-6">

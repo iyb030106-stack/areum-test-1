@@ -47,22 +47,19 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
   return (
     <div className="pb-32 min-h-screen relative">
       <header className="sticky top-0 z-20 bg-white/55 dark:bg-slate-900/55 backdrop-blur-xl border-b border-white/40 shadow-sm">
-        <div className="px-6 pt-14 pb-4">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="size-2 bg-primary rounded-full animate-pulse shadow-sm shadow-primary/50"></span>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academy Bulletin</p>
+        <div className="px-6 pt-14 pb-2 flex items-center justify-between">
+          <div>
+            <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+            <p className="text-sm font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mt-1.5">공지 사항</p>
           </div>
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">공지사항</h1>
-            {role === 'admin' && (
-              <button
-                onClick={() => navigate('/announcements/new')}
-                className="size-5 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/10 active:scale-95 transition-all"
-              >
-                <span className="material-symbols-outlined text-[12px]">add</span>
-              </button>
-            )}
-          </div>
+          {role === 'admin' && (
+            <button
+              onClick={() => navigate('/announcements/new')}
+              className="size-10 rounded-full bg-white/45 backdrop-blur-md flex items-center justify-center shadow-sm border border-white/40 hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-all active:scale-95 relative"
+            >
+              <span className="material-symbols-outlined text-[24px]">add</span>
+            </button>
+          )}
         </div>
 
         <div className="px-6 mb-4">
@@ -98,7 +95,7 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
         {/* Q&A 배너 */}
         <div
           onClick={() => navigate('/faq')}
-          className="group relative overflow-hidden px-5 py-4 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-3xl shadow-lg shadow-indigo-200/20 cursor-pointer active:scale-[0.98] transition-all"
+          className="group relative overflow-hidden px-5 py-4 bg-slate-800 dark:bg-slate-900 rounded-3xl shadow-lg shadow-slate-200/10 cursor-pointer active:scale-[0.98] transition-all"
         >
           <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-110 transition-transform">
             <span className="material-symbols-outlined text-[60px] text-white">quiz</span>
