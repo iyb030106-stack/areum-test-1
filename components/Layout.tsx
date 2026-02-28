@@ -44,13 +44,9 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
         <div className="flex items-end justify-between">
           <NavLink to="/home" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
             <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/home' ? 'fill-1' : ''}`}>grid_view</span>
-            <span className="text-[10px] font-black tracking-tighter">운영 매뉴얼</span>
+            <span className="text-[10px] font-black tracking-tighter">매뉴얼</span>
           </NavLink>
 
-          <NavLink to="/subject-manuals" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
-            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/subject-manuals' ? 'fill-1' : ''}`}>menu_book</span>
-            <span className="text-[10px] font-black tracking-tighter">운영 노하우</span>
-          </NavLink>
 
           <NavLink to="/" end className="flex-1 flex flex-col items-center -mt-12 group">
             <div className={`size-16 rounded-[2.25rem] flex items-center justify-center shadow-2xl border-[1.5px] border-slate-200/80 dark:border-slate-700/80 active:scale-95 transition-all ${location.pathname === '/' ? 'bg-primary text-white shadow-primary/40' : 'bg-white text-slate-900 shadow-slate-200/50'}`}>

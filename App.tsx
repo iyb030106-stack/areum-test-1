@@ -7,7 +7,6 @@ import { getUserData, FirestoreUser, logoutUser } from './services/authService';
 
 import Layout from './components/Layout';
 import Home from './views/Home';
-import SubjectManuals from './views/SubjectManuals';
 import AIGuide from './views/AIGuide';
 import StoreInfo from './views/StoreInfo';
 import ManualCategory from './views/ManualCategory';
@@ -151,7 +150,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<AIGuide role={role} />} />
             <Route path="/home" element={<Home role={role} />} />
-            <Route path="/subject-manuals" element={<SubjectManuals role={role} />} />
+            <Route path="/subject-manuals" element={<Navigate to="/home" replace />} />
             <Route path="/ai" element={<Navigate to="/" replace />} />
             {/* ... 나머지 라우트들 ... */}
             <Route path="/announcements" element={<Announcements role={role} />} />

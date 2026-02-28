@@ -72,6 +72,8 @@ const Home: React.FC<HomeProps> = ({ role }) => {
   }, []);
 
   const adminCategories = categories.filter(c => c.type === 'admin');
+  const subjectCategories = categories.filter(c => c.type === 'subject');
+  const [newCatType, setNewCatType] = useState<'admin' | 'subject'>('admin');
 
 
   const filteredItems = useMemo(() => {
@@ -126,7 +128,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
       <header className="px-6 pt-14 pb-2 flex items-center justify-between relative z-10">
         <div>
           <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
-          <p className="text-sm font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mt-1.5">운영 매뉴얼</p>
+          <p className="text-sm font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mt-1.5">매뉴얼</p>
         </div>
         <button
           onClick={handleOpenNoti}
@@ -202,7 +204,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
                     }}
                     className={`ml-4 size-9 rounded-full flex items-center justify-center transition-all ${isManaging ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 text-slate-400 hover:text-primary'}`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">{isManaging ? 'check' : 'settings'}</span>
+                    <span className="material-symbols-outlined text-[20px]">{isManaging ? 'check' : 'add'}</span>
                   </button>
                 )}
               </div>
@@ -212,9 +214,25 @@ const Home: React.FC<HomeProps> = ({ role }) => {
                   <div className="flex items-center gap-3 px-1">
                     <span className="size-2 bg-primary rounded-full"></span>
                     <h4 className="text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest">
-                      {editingCatId ? '카테고리 수정' : '새 운영 카테고리 추가'}
+                      {editingCatId ? '카테고리 수정' : '새 매뉴얼 카테고리 추가'}
                     </h4>
                   </div>
+                  {!editingCatId && (
+                    <div className="flex gap-2 p-1">
+                      <button
+                        onClick={() => setNewCatType('admin')}
+                        className={`flex-1 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${newCatType === 'admin' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-400'}`}
+                      >
+                        운영 매뉴얼
+                      </button>
+                      <button
+                        onClick={() => setNewCatType('subject')}
+                        className={`flex-1 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${newCatType === 'subject' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-slate-50 text-slate-400'}`}
+                      >
+                        과목 가이드
+                      </button>
+                    </div>
+                  )}
                   <div className="space-y-4">
                     <div className="flex gap-3">
                       <div className="size-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary border border-slate-100 dark:border-slate-700 shrink-0">
@@ -243,8 +261,8 @@ const Home: React.FC<HomeProps> = ({ role }) => {
                     </div>
                     <div className="flex gap-2 pt-2">
                       <button
-                        onClick={editingCatId ? () => handleUpdateCategory(editingCatId) : () => handleAddCategory('admin')}
-                        className="flex-1 bg-primary text-white py-3.5 rounded-2xl text-xs font-black shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                        onClick={editingCatId ? () => handleUpdateCategory(editingCatId) : () => handleAddCategory(newCatType)}
+                        className={`flex-1 py-3.5 rounded-2xl text-xs font-black shadow-lg active:scale-95 transition-all text-white ${editingCatId || newCatType === 'admin' ? 'bg-primary shadow-primary/20' : 'bg-emerald-500 shadow-emerald-200'}`}
                       >
                         {editingCatId ? '변경사항 저장' : '카테고리 추가'}
                       </button>
@@ -267,6 +285,53 @@ const Home: React.FC<HomeProps> = ({ role }) => {
 
               <div className="grid grid-cols-2 gap-5 pb-10">
                 {adminCategories.map((cat) => (
+                  <div key={cat.id} className="relative group">
+                    <div
+                      onClick={() => !isManaging && navigate(`/manuals/${cat.id}`)}
+                      className={`h-full bg-white/55 backdrop-blur-md dark:bg-slate-900/55 p-6 rounded-[2.5rem] border border-white/40 dark:border-slate-800 shadow-sm transition-all flex flex-col items-center text-center gap-4 ${isManaging ? 'opacity-50 grayscale' : 'hover:shadow-xl cursor-pointer active:scale-95'}`}
+                    >
+                      <div className={`size-14 rounded-3xl ${cat.bgClass} flex items-center justify-center shadow-inner`}>
+                        {cat.icon === 'Aa' ? (
+                          <span className={`${cat.colorClass} text-xl font-black`}>Aa</span>
+                        ) : (
+                          <span className={`material-symbols-outlined ${cat.colorClass} text-3xl`}>{cat.icon}</span>
+                        )}
+                      </div>
+                      <span className="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight">{cat.name}</span>
+                    </div>
+
+                    {isManaging && role === 'admin' && (
+                      <div className="absolute -top-2 -right-2 flex gap-1 z-20">
+                        <button
+                          onClick={() => handleStartEdit(cat)}
+                          className="size-8 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-lg active:scale-90"
+                        >
+                          <span className="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCategory(cat.id)}
+                          className="size-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg active:scale-90"
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 과목별 매뉴얼 섹션 */}
+            <section>
+              <div className="flex items-center justify-between mb-8 px-1">
+                <div className="flex items-center gap-4 flex-1">
+                  <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap">과목별 매뉴얼</h2>
+                  <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800 opacity-50"></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-5 pb-10">
+                {subjectCategories.map((cat) => (
                   <div key={cat.id} className="relative group">
                     <div
                       onClick={() => !isManaging && navigate(`/manuals/${cat.id}`)}
