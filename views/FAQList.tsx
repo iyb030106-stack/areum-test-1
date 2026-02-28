@@ -39,22 +39,19 @@ const FAQList: React.FC<FAQListProps> = ({ role }) => {
     return (
         <div className="pb-32 min-h-screen relative">
             <header className="sticky top-0 z-20 bg-white/55 dark:bg-slate-900/55 backdrop-blur-xl border-b border-white/40 shadow-sm">
-                <div className="px-6 pt-14 pb-4">
-                    <div className="flex items-center gap-2 mb-1.5">
-                        <span className="size-2 bg-amber-500 rounded-full animate-pulse shadow-sm shadow-amber-500/50"></span>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Help Center</p>
+                <div className="px-6 pt-14 pb-2 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+                        <p className="text-sm font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mt-1.5">Q&A</p>
                     </div>
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">자주 묻는 질문 (FAQ)</h1>
-                        {role === 'admin' && (
-                            <button
-                                onClick={() => navigate('/faq/new')}
-                                className="size-10 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
-                            >
-                                <span className="material-symbols-outlined">add</span>
-                            </button>
-                        )}
-                    </div>
+                    {role === 'admin' && (
+                        <button
+                            onClick={() => navigate('/faq/new')}
+                            className="size-10 rounded-full bg-white/45 backdrop-blur-md flex items-center justify-center shadow-sm border border-white/40 hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-all active:scale-95 relative"
+                        >
+                            <span className="material-symbols-outlined text-[24px]">add</span>
+                        </button>
+                    )}
                 </div>
 
                 <div className="px-6 mb-4">
