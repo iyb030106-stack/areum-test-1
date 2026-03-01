@@ -388,22 +388,22 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
                       );
                     })()}
                   </div>
-                    <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
-                  </div>
-                </div>
-              );
-            })}
-            {isLoading && (
-              <div className="flex gap-3 items-center pl-11">
-                <div className="flex gap-1.5">
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></div>
-                  <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-150"></div>
+                  <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
                 </div>
               </div>
-            )}
-          </main>
-        )
+            );
+          })}
+          {isLoading && (
+            <div className="flex gap-3 items-center pl-11">
+              <div className="flex gap-1.5">
+                <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></div>
+                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-150"></div>
+              </div>
+            </div>
+          )}
+        </main>
+      )
       }
 
       {/* ── 하단 입력창 (Genspark 스타일) ── */}
