@@ -327,39 +327,39 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
               className="size-32 object-contain haema-flip animate-float drop-shadow-sm shrink-0"
             />
 
-            {/* 직원 모드: 말풍선 (해마 오른쪽, 머리 높이에 맞춤) */}
-            {role === 'staff' && (
-              <div className="relative mt-3">
-                {/* 꼬리 바깥 삼각형 (테두리색) */}
-                <div
-                  className="absolute"
-                  style={{
-                    left: -11,
-                    top: 9,
-                    width: 0, height: 0,
-                    borderTop: '9px solid transparent',
-                    borderBottom: '9px solid transparent',
-                    borderRight: '11px solid #e2e8f0',
-                  }}
-                />
-                {/* 꼬리 안쪽 삼각형 (배경색 — 테두리만 보이게) */}
-                <div
-                  className="absolute"
-                  style={{
-                    left: -8,
-                    top: 10,
-                    width: 0, height: 0,
-                    borderTop: '8px solid transparent',
-                    borderBottom: '8px solid transparent',
-                    borderRight: '10px solid white',
-                  }}
-                />
-                {/* 말풍선 박스 */}
-                <div className="bg-white text-slate-400 text-[13px] font-medium px-4 py-2.5 rounded-2xl border border-slate-200 whitespace-nowrap">
-                  업무 방법이 궁금하면 저에게 물어보세요 !
-                </div>
+            {/* 말풍선 (해마 오른쪽, 머리 높이에 맞춤) */}
+            <div className="relative mt-3">
+              {/* 꼬리 바깥 삼각형 (테두리색) */}
+              <div
+                className="absolute"
+                style={{
+                  left: -11,
+                  top: 9,
+                  width: 0, height: 0,
+                  borderTop: '9px solid transparent',
+                  borderBottom: '9px solid transparent',
+                  borderRight: '11px solid #e2e8f0',
+                }}
+              />
+              {/* 꼬리 안쪽 삼각형 (배경색 — 테두리만 보이게) */}
+              <div
+                className="absolute"
+                style={{
+                  left: -8,
+                  top: 10,
+                  width: 0, height: 0,
+                  borderTop: '8px solid transparent',
+                  borderBottom: '8px solid transparent',
+                  borderRight: '10px solid white',
+                }}
+              />
+              {/* 말풍선 박스 */}
+              <div className="bg-white text-slate-400 text-[13px] font-medium px-4 py-2.5 rounded-2xl border border-slate-200 whitespace-nowrap">
+                {role === 'admin'
+                  ? '매뉴얼을 저에게 말해주세요 !'
+                  : '업무 방법이 궁금하면 저에게 물어보세요 !'}
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
@@ -423,22 +423,22 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
                       );
                     })()}
                   </div>
-                    <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
-                  </div>
-                </div>
-              );
-            })}
-            {isLoading && (
-              <div className="flex gap-3 items-center pl-11">
-                <div className="flex gap-1.5">
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></div>
-                  <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-150"></div>
+                  <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
                 </div>
               </div>
-            )}
-          </main>
-        )
+            );
+          })}
+          {isLoading && (
+            <div className="flex gap-3 items-center pl-11">
+              <div className="flex gap-1.5">
+                <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></div>
+                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-150"></div>
+              </div>
+            </div>
+          )}
+        </main>
+      )
       }
 
       {/* ── 하단 입력창 (Genspark 스타일) ── */}
@@ -458,7 +458,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
           {/* 텍스트 입력 */}
           <input
             className="flex-1 bg-transparent border-none focus:ring-0 text-[14px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
-            placeholder="업무 방법이 궁금하면 HAEMA에게 물어보세요"
+            placeholder={role === 'admin' ? '매뉴얼을 HAEMA에게 말해보세요.' : '업무 방법이 궁금하면 HAEMA에게 물어보세요.'}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
