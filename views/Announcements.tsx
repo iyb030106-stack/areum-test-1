@@ -2,10 +2,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../types';
-import { 
-  subscribeToAnnouncements, 
-  deleteAnnouncement, 
-  formatTimeAgo, 
+import {
+  subscribeToAnnouncements,
+  deleteAnnouncement,
+  formatTimeAgo,
   Announcement,
   subscribeToNoticeCategories,
   NoticeCategory,
@@ -14,6 +14,7 @@ import {
   updateNoticeCategory,
   deleteNoticeCategory
 } from '../services/announcementService';
+import { useAcademy } from '../contexts/AcademyContext';
 
 interface AnnouncementsProps {
   role?: UserRole;
@@ -31,6 +32,7 @@ const INITIAL_NOTICE_CATEGORIES = [
 
 const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
   const navigate = useNavigate();
+  const { academyId, academyName } = useAcademy();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [categories, setCategories] = useState<NoticeCategory[]>([]);
   const [activeFilter, setActiveFilter] = useState('전체');
@@ -42,18 +44,19 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
   const [newCatName, setNewCatName] = useState('');
 
   useEffect(() => {
-    const unsubAnn = subscribeToAnnouncements(setAnnouncements);
-    const unsubCat = subscribeToNoticeCategories(setCategories);
-    
+    if (!academyId) return;
+    const unsubAnn = subscribeToAnnouncements(academyId, setAnnouncements);
+    const unsubCat = subscribeToNoticeCategories(academyId, setCategories);
+
     if (role === 'admin') {
-      initializeNoticeCategoriesIfNeeded(INITIAL_NOTICE_CATEGORIES);
+      initializeNoticeCategoriesIfNeeded(academyId, INITIAL_NOTICE_CATEGORIES);
     }
 
     return () => {
       unsubAnn();
       unsubCat();
     };
-  }, [role]);
+  }, [role, academyId]);
 
   const filteredUpdates = useMemo(() => {
     let list = announcements;
@@ -79,8 +82,8 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
   };
 
   const handleAddCategory = async () => {
-    if (!newCatName.trim()) return;
-    await createNoticeCategory(newCatName.trim(), categories.length);
+    if (!newCatName.trim() || !academyId) return;
+    await createNoticeCategory(academyId, newCatName.trim(), categories.length);
     setNewCatName('');
   };
 
@@ -107,7 +110,12 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
       <header className="sticky top-0 z-20 bg-white/55 dark:bg-slate-900/55 backdrop-blur-xl border-b border-white/40 dark:border-slate-800 shadow-sm">
         <div className="px-6 pt-14 pb-2 flex items-center justify-between">
           <div>
-            <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+              {academyName && academyName !== 'HAEMA' && (
+                <span className="text-[10px] font-black text-slate-400 tracking-wider">{academyName}</span>
+              )}
+            </div>
             <p className="text-sm font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mt-1.5">공지 사항</p>
           </div>
           <div className="flex gap-2">
@@ -143,10 +151,10 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
           </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto no-scrollbar px-6 pb-4">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar px-6 pb-4 items-center">
           <button
             onClick={() => { setActiveFilter('전체'); setIsManaging(false); }}
-            className={`px-5 py-2.5 rounded-xl text-[11px] font-black whitespace-nowrap transition-all border ${activeFilter === '전체' && !isManaging
+            className={`px-5 py-2.5 rounded-xl text-[11px] font-black whitespace-nowrap transition-all border shrink-0 ${activeFilter === '전체' && !isManaging
               ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
               : 'bg-white/55 dark:bg-slate-800/55 text-slate-400 border-white/40 dark:border-slate-700'
               }`}
@@ -154,30 +162,40 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
             전체
           </button>
           {categories.map((cat) => (
-            <div key={cat.id} className="relative group">
-              <button
-                onClick={() => { setActiveFilter(cat.name); setIsManaging(false); }}
-                className={`px-5 py-2.5 rounded-xl text-[11px] font-black whitespace-nowrap transition-all border ${activeFilter === cat.name && !isManaging
-                  ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
-                  : 'bg-white/55 dark:bg-slate-800/55 text-slate-400 border-white/40 dark:border-slate-700'
-                  }`}
-              >
-                {cat.name}
-              </button>
-              {isManaging && (
-                <div className="absolute -top-1 -right-1 flex gap-1 scale-75 origin-top-right">
-                  <button onClick={() => handleStartEdit(cat)} className="size-6 rounded-full bg-teal-500 text-white flex items-center justify-center active:scale-90 shadow-md">
-                    <span className="material-symbols-outlined text-[14px]">edit</span>
+            <div key={cat.id} className="shrink-0">
+              {isManaging ? (
+                /* 관리 모드: 인라인 수정·삭제 버튼 */
+                <div className="flex items-center gap-1 pl-3 pr-1.5 py-1.5 rounded-xl text-[11px] font-black whitespace-nowrap bg-white/55 dark:bg-slate-800/55 text-slate-500 border border-white/40 dark:border-slate-700">
+                  <span>{cat.name}</span>
+                  <button
+                    onClick={() => handleStartEdit(cat)}
+                    className="ml-1 size-5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center active:scale-90 transition-all hover:bg-slate-300"
+                  >
+                    <span className="material-symbols-outlined text-[12px]">edit</span>
                   </button>
-                  <button onClick={() => handleDeleteCategory(cat.id)} className="size-6 rounded-full bg-red-500 text-white flex items-center justify-center active:scale-90 shadow-md">
-                    <span className="material-symbols-outlined text-[14px]">close</span>
+                  <button
+                    onClick={() => handleDeleteCategory(cat.id)}
+                    className="size-5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center active:scale-90 transition-all hover:bg-red-100 hover:text-red-500"
+                  >
+                    <span className="material-symbols-outlined text-[12px]">close</span>
                   </button>
                 </div>
+              ) : (
+                /* 일반 모드: 필터 버튼 */
+                <button
+                  onClick={() => { setActiveFilter(cat.name); setIsManaging(false); }}
+                  className={`px-5 py-2.5 rounded-xl text-[11px] font-black whitespace-nowrap transition-all border ${activeFilter === cat.name && !isManaging
+                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                    : 'bg-white/55 dark:bg-slate-800/55 text-slate-400 border-white/40 dark:border-slate-700'
+                    }`}
+                >
+                  {cat.name}
+                </button>
               )}
             </div>
           ))}
           {isManaging && (
-            <div className="flex gap-2 items-center pl-2">
+            <div className="flex gap-2 items-center pl-2 shrink-0">
               <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
               <div className="flex bg-white/45 backdrop-blur-md border border-white/40 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/10">
                 <input
@@ -187,7 +205,7 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
                   value={editingId ? '' : newCatName}
                   onChange={(e) => !editingId && setNewCatName(e.target.value)}
                 />
-                <button 
+                <button
                   onClick={handleAddCategory}
                   className="bg-primary text-white px-3 text-[10px] font-black active:opacity-80"
                 >
@@ -197,6 +215,7 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
             </div>
           )}
         </div>
+
       </header>
 
       <main className="px-6 pt-8 space-y-6 relative z-10">
@@ -210,13 +229,13 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
               />
-              <button 
+              <button
                 onClick={() => handleUpdateCategory(editingId)}
                 className="bg-primary text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-primary/20"
               >
                 변경
               </button>
-              <button 
+              <button
                 onClick={() => setEditingId(null)}
                 className="bg-slate-100 dark:bg-slate-700 text-slate-400 px-4 py-2 rounded-xl text-xs font-black"
               >
@@ -238,9 +257,8 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
             >
               <div className="flex items-center gap-1.5 mb-2">
                 <span
-                  className={`text-[9px] font-black px-2 py-0.5 rounded-lg leading-none ${
-                    update.isImportant ? 'bg-red-50 text-red-600' : 'bg-slate-100/70 text-slate-500'
-                  }`}
+                  className={`text-[9px] font-black px-2 py-0.5 rounded-lg leading-none ${update.isImportant ? 'bg-red-50 text-red-600' : 'bg-slate-100/70 text-slate-500'
+                    }`}
                 >
                   {update.isImportant ? '중요' : update.category}
                 </span>

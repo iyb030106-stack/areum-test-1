@@ -10,6 +10,9 @@ import {
     serverTimestamp,
     Timestamp,
     getDoc,
+    getDocs,
+    writeBatch,
+    where
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { createNotification } from './notificationService';
@@ -24,6 +27,7 @@ export interface Announcement {
     authorName: string;
     authorPosition: string; // 직책
     authorInitial: string;
+    academyId: string;
     createdAt: Timestamp | null;
     updatedAt: Timestamp | null;
 }
@@ -32,25 +36,40 @@ export interface NoticeCategory {
     id: string;
     name: string;
     order: number;
+    academyId: string;
     createdAt?: Timestamp;
 }
 
 /** 공지사항 카테고리 실시간 구독 */
 export const subscribeToNoticeCategories = (
+    academyId: string,
     callback: (items: NoticeCategory[]) => void,
 ): (() => void) => {
-    const q = query(collection(db, 'notice_categories'), orderBy('order', 'asc'));
+    if (!academyId) return () => { };
+    const q = query(
+        collection(db, 'notice_categories'),
+        where('academyId', '==', academyId)
+    );
     return onSnapshot(q, (snapshot) => {
-        const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as NoticeCategory[];
+        const rawItems = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as NoticeCategory[];
+        const map = new Map<string, NoticeCategory>();
+        rawItems.forEach(item => {
+            if (!map.has(item.name)) map.set(item.name, item);
+        });
+        const items = Array.from(map.values());
+        items.sort((a, b) => (a.order || 0) - (b.order || 0));
         callback(items);
+    }, (error) => {
+        console.error("subscribeToNoticeCategories error:", error);
     });
 };
 
 /** 공지사항 카테고리 생성 */
-export const createNoticeCategory = async (name: string, order: number): Promise<string> => {
+export const createNoticeCategory = async (academyId: string, name: string, order: number): Promise<string> => {
     const ref = await addDoc(collection(db, 'notice_categories'), {
         name,
         order,
+        academyId,
         createdAt: serverTimestamp(),
     });
     return ref.id;
@@ -61,30 +80,59 @@ export const updateNoticeCategory = async (id: string, name: string): Promise<vo
     await updateDoc(doc(db, 'notice_categories', id), { name });
 };
 
-/** 공지사항 카테고리 삭제 */
+/** 공지사항 카테고리 삭제 (관련 공지사항 및 알림도 함께 삭제) */
 export const deleteNoticeCategory = async (id: string): Promise<void> => {
-    await deleteDoc(doc(db, 'notice_categories', id));
+    const batch = writeBatch(db);
+
+    // 1. 해당 카테고리의 공지사항들 찾기
+    const annSnap = await getDocs(query(collection(db, 'announcements'), where('categoryId', '==', id)));
+
+    for (const annDoc of annSnap.docs) {
+        // 2. 각 공지사항의 알림들 삭제
+        const notiSnap = await getDocs(query(collection(db, 'notifications'), where('targetId', '==', annDoc.id)));
+        notiSnap.docs.forEach(d => batch.delete(d.ref));
+
+        // 3. 공지사항 원본 삭제
+        batch.delete(annDoc.ref);
+    }
+
+    // 4. 카테고리 삭제
+    batch.delete(doc(db, 'notice_categories', id));
+    await batch.commit();
 };
 
 /** 초기 카테고리 설정 (필요시) */
-export const initializeNoticeCategoriesIfNeeded = async (initialNames: string[]): Promise<void> => {
-    const q = query(collection(db, 'notice_categories'));
+export const initializeNoticeCategoriesIfNeeded = async (academyId: string, initialNames: string[]): Promise<void> => {
+    if (!academyId) return;
+    const q = query(collection(db, 'notice_categories'), where('academyId', '==', academyId));
     const snap = await import('firebase/firestore').then(({ getDocs }) => getDocs(q));
     if (snap.empty) {
         for (let i = 0; i < initialNames.length; i++) {
-            await createNoticeCategory(initialNames[i], i);
+            await createNoticeCategory(academyId, initialNames[i], i);
         }
     }
 };
 
 /** 공지사항 목록 실시간 구독 */
 export const subscribeToAnnouncements = (
+    academyId: string,
     callback: (items: Announcement[]) => void,
 ): (() => void) => {
-    const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
+    if (!academyId) return () => { };
+    const q = query(
+        collection(db, 'announcements'),
+        where('academyId', '==', academyId)
+    );
     return onSnapshot(q, (snapshot) => {
         const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Announcement[];
+        items.sort((a, b) => {
+            const tA = a.createdAt?.toMillis() || 0;
+            const tB = b.createdAt?.toMillis() || 0;
+            return tB - tA; // desc
+        });
         callback(items);
+    }, (error) => {
+        console.error("subscribeToAnnouncements error:", error);
     });
 };
 
@@ -111,6 +159,7 @@ export const createAnnouncement = async (
         action: 'created',
         title: data.title,
         targetId: ref.id,
+        academyId: data.academyId,
         authorName: data.authorName,
     });
 
@@ -129,19 +178,30 @@ export const updateAnnouncement = async (
 
     // 알림 생성 (수정 시)
     if (data.title) {
+        const ann = await getAnnouncement(id);
         await createNotification({
             type: 'announcement',
             action: 'updated',
             title: data.title,
             targetId: id,
+            academyId: data.academyId || (ann?.academyId || ''),
             authorName: '관리자', // 수정자는 일단 관리자로 표기
         });
     }
 };
 
-/** 공지사항 삭제 */
+/** 공지사항 삭제 (관련 알림도 함께 삭제) */
 export const deleteAnnouncement = async (id: string): Promise<void> => {
-    await deleteDoc(doc(db, 'announcements', id));
+    const batch = writeBatch(db);
+
+    // 1. 관련 알림 삭제
+    const notiSnap = await getDocs(query(collection(db, 'notifications'), where('targetId', '==', id)));
+    notiSnap.docs.forEach(d => batch.delete(d.ref));
+
+    // 2. 공지사항 원본 삭제
+    batch.delete(doc(db, 'announcements', id));
+
+    await batch.commit();
 };
 
 /** Timestamp → 상대 시간 문자열 (예: "2시간 전") */

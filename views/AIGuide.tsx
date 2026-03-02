@@ -12,39 +12,52 @@ import {
   deleteManualItem,
   deleteManualCategory,
 } from '../services/manualService';
+import { createAnnouncement, subscribeToAnnouncements, Announcement } from '../services/announcementService';
+import { subscribeToFAQs, FAQ } from '../services/faqService';
+import { auth } from '../services/firebase';
 import { useChat } from '../contexts/ChatContext';
+
+import { FirestoreUser } from '../services/authService';
+import { useAcademy } from '../contexts/AcademyContext';
 
 interface AIGuideProps {
   role: UserRole;
+  currentUser?: FirestoreUser;
 }
 
-const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
+const AIGuide: React.FC<AIGuideProps> = ({ role, currentUser }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { academyId, academyName } = useAcademy();
   const initialPrompt = (location.state as any)?.prompt || '';
   const [input, setInput] = useState('');
   const [categories, setCategories] = useState<ManualCategory[]>([]);
   const [manuals, setManuals] = useState<ManualItem[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [isApplying, setIsApplying] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [importantOverrides, setImportantOverrides] = useState<Record<number, boolean>>({});
   const { messagesMap, isLoading, sendMessage, stopMessage, resetChat } = useChat();
   const messages = messagesMap[role] || [];
 
   useEffect(() => {
-    // 진입 시 대화 자동 초기화
-    resetChat(role);
-
-    const unsubCats = subscribeToCategories(setCategories);
-    const unsubItems = subscribeToAllManuals(setManuals);
+    if (!academyId) return;
+    const unsubCats = subscribeToCategories(academyId, setCategories);
+    const unsubItems = subscribeToAllManuals(academyId, setManuals);
+    const unsubAnns = subscribeToAnnouncements(academyId, setAnnouncements);
+    const unsubFaqs = subscribeToFAQs(academyId, setFaqs);
     return () => {
       unsubCats();
       unsubItems();
+      unsubAnns();
+      unsubFaqs();
     };
-  }, [role, resetChat]);
+  }, [academyId, role]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -58,16 +71,31 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
     }
   }, [initialPrompt]);
 
-  // 매뉴얼 데이터를 AI가 읽기 쉬운 텍스트 컨텍스트로 변환 (ID 포함)
-  const getManualContext = () => {
-    let context = "";
+  // 매뉴얼, 공지사항, FAQ 데이터를 AI가 읽기 쉬운 텍스트 컨텍스트로 변환
+  const getAIContext = () => {
+    let context = "아래는 현재 학원의 시스템 정보입니다. 사용자의 질문에 답변할 때 이 정보를 먼저 확인하세요.\n";
+
+    context += "\n[1. 매뉴얼 정보]\n";
     categories.forEach(cat => {
-      context += `\n[카테고리: ${cat.name} (${cat.type === 'admin' ? '운영' : '수업'}) | 카테고리ID: ${cat.id}]\n`;
+      context += `\n카테고리: ${cat.name} (${cat.type === 'admin' ? '운영' : '수업'}) | ID: ${cat.id}\n`;
       const catItems = manuals.filter(m => m.categoryId === cat.id);
       catItems.forEach(item => {
-        context += `- [ID:${item.id}] ${item.title}: ${item.description}\n  단계: ${item.steps.join(' > ')}\n`;
+        context += `- [ID:${item.id}] 제목: ${item.title}\n  내용: ${item.description}\n  단계: ${item.steps.join(' > ')}\n`;
       });
     });
+
+    context += "\n[2. 최근 공지사항]\n";
+    if (announcements.length === 0) context += "공지사항이 없습니다.\n";
+    announcements.slice(0, 10).forEach(ann => {
+      context += `- [${ann.isImportant ? '중요' : '일반'}] [${ann.category}] ${ann.title}: ${ann.description} (작성: ${ann.authorName} ${ann.authorPosition})\n`;
+    });
+
+    context += "\n[3. 자주 묻는 질문 (FAQ)]\n";
+    if (faqs.length === 0) context += "FAQ가 없습니다.\n";
+    faqs.forEach(faq => {
+      context += `Q: ${faq.question}\nA: ${faq.answer}\n`;
+    });
+
     return context;
   };
 
@@ -76,8 +104,8 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
     if (!textToSend.trim() || isLoading) return;
 
     setInput('');
-    // 관리자/직원 모두 전체 컨텍스트(ID 포함)를 제공
-    const context = getManualContext();
+    // 관리자/직원 모두 전체 컨텍스트를 제공
+    const context = getAIContext();
     await sendMessage(textToSend, role, context);
   };
 
@@ -137,7 +165,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
   };
 
   // AI 제안 내용을 실제 시스템에 적용 (생성 / 수정 / 삭제)
-  const handleApplyStructure = async (jsonStr: string) => {
+  const handleApplyStructure = async (jsonStr: string, isImportantOverride?: boolean) => {
     if (isApplying) return;
     try {
       setIsApplying(true);
@@ -160,6 +188,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
           } else {
             catId = await createManualCategory({
               ...group.category,
+              academyId,
               order: categories.length + i,
               colorClass: group.category.type === 'admin' ? 'text-slate-500/80' : 'text-primary/80',
               bgClass: group.category.type === 'admin' ? 'bg-slate-50/50' : 'bg-primary/5'
@@ -170,6 +199,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
               ...item,
               categoryId: catId,
               subCategory: group.category.name,
+              academyId,
               timeEstimate: item.timeEstimate || '10분',
               level: item.level || 'Beginner',
               lastEditedBy: 'AI_ASSISTANT',
@@ -226,8 +256,30 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
         }
         alert(`🗑️ ${data.categories.length}개의 카테고리와 포함된 전체 매뉴얼이 삭제되었습니다.`);
 
+        // ── 공지사항 생성 ──────────────────────────────────
+      } else if (data.requestType === 'CREATE_ANNOUNCEMENT') {
+        if (!data.announcements || !Array.isArray(data.announcements)) {
+          alert('공지사항 데이터 구조를 찾을 수 없습니다.');
+          return;
+        }
+        const user = auth.currentUser;
+        for (const ann of data.announcements) {
+          await createAnnouncement({
+            title: ann.title,
+            description: ann.description,
+            category: ann.category || '일반',
+            academyId,
+            isImportant: isImportantOverride !== undefined ? isImportantOverride : (ann.isImportant ?? false),
+            authorId: user?.uid || 'AI_ASSISTANT',
+            authorName: currentUser?.name || user?.displayName || 'Haema AI',
+            authorPosition: currentUser?.position || '관리자',
+            authorInitial: (currentUser?.name?.[0] || user?.displayName?.[0] || 'H'),
+          });
+        }
+        alert(`✅ ${data.announcements.length}개의 공지사항이 등록되었습니다!`);
+
       } else {
-        alert('올바른 매뉴얼 데이터 형식이 아닙니다.');
+        alert('올바른 데이터 형식이 아닙니다.');
       }
     } catch (err: any) {
       console.error('Apply Structure Error:', err);
@@ -277,7 +329,19 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
   };
 
   const renderMessageContent = (content: string) => {
-    const textOnly = content.replace(/```json\n[\s\S]*?\n```/, '').trim();
+    // 1단계: 완성된 코드 블록 제거 (언어 태그·개행 형식 무관)
+    let textOnly = content
+      .replace(/```[\w]*[\r\n][\s\S]*?[\r\n]```/g, '')
+      .replace(/```[\s\S]*?```/g, '');
+
+    // 2단계: 스트리밍 중 미완성 코드 블록 제거
+    // (``` 로 시작했지만 아직 닫히지 않은 부분을 잘라냄)
+    const openIdx = textOnly.indexOf('```');
+    if (openIdx !== -1) {
+      textOnly = textOnly.substring(0, openIdx);
+    }
+
+    textOnly = textOnly.trim();
     const parts = textOnly.split(/(\*\*.*?\*\*)/g);
 
     return parts.map((part, i) => {
@@ -300,8 +364,13 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
 
       {/* ── 상단 고정 헤더 (항상 표시) ── */}
       <header className="flex items-center justify-between px-6 pt-14 pb-4 shrink-0 z-10 border-b border-slate-100 dark:border-slate-800">
-        {/* HAEMA 타이틀 */}
-        <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">HAEMA</span>
+        {/* 학원명 타이틀 */}
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">HAEMA</span>
+          {academyName && academyName !== 'HAEMA' && (
+            <span className="text-[10px] font-black text-slate-400 tracking-wider">{academyName}</span>
+          )}
+        </div>
 
         {/* 오른쪽: 초기화 버튼 */}
         <button
@@ -327,39 +396,39 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
               className="size-32 object-contain haema-flip animate-float drop-shadow-sm shrink-0"
             />
 
-            {/* 직원 모드: 말풍선 (해마 오른쪽, 머리 높이에 맞춤) */}
-            {role === 'staff' && (
-              <div className="relative mt-3">
-                {/* 꼬리 바깥 삼각형 (테두리색) */}
-                <div
-                  className="absolute"
-                  style={{
-                    left: -11,
-                    top: 9,
-                    width: 0, height: 0,
-                    borderTop: '9px solid transparent',
-                    borderBottom: '9px solid transparent',
-                    borderRight: '11px solid #e2e8f0',
-                  }}
-                />
-                {/* 꼬리 안쪽 삼각형 (배경색 — 테두리만 보이게) */}
-                <div
-                  className="absolute"
-                  style={{
-                    left: -8,
-                    top: 10,
-                    width: 0, height: 0,
-                    borderTop: '8px solid transparent',
-                    borderBottom: '8px solid transparent',
-                    borderRight: '10px solid white',
-                  }}
-                />
-                {/* 말풍선 박스 */}
-                <div className="bg-white text-slate-400 text-[13px] font-medium px-4 py-2.5 rounded-2xl border border-slate-200 whitespace-nowrap">
-                  업무 방법이 궁금하면 저에게 물어보세요 !
-                </div>
+            {/* 말풍선 (해마 오른쪽, 머리 높이에 맞춤) */}
+            <div className="relative mt-3">
+              {/* 꼬리 바깥 삼각형 (테두리색) */}
+              <div
+                className="absolute"
+                style={{
+                  left: -11,
+                  top: 9,
+                  width: 0, height: 0,
+                  borderTop: '9px solid transparent',
+                  borderBottom: '9px solid transparent',
+                  borderRight: '11px solid #e2e8f0',
+                }}
+              />
+              {/* 꼬리 안쪽 삼각형 (배경색 — 테두리만 보이게) */}
+              <div
+                className="absolute"
+                style={{
+                  left: -8,
+                  top: 10,
+                  width: 0, height: 0,
+                  borderTop: '8px solid transparent',
+                  borderBottom: '8px solid transparent',
+                  borderRight: '10px solid white',
+                }}
+              />
+              {/* 말풍선 박스 */}
+              <div className="bg-white text-slate-400 text-[13px] font-medium px-4 py-2.5 rounded-2xl border border-slate-200 whitespace-nowrap">
+                {role === 'admin'
+                  ? '매뉴얼을 저에게 말해주세요 !'
+                  : '업무 방법이 궁금하면 저에게 물어보세요 !'}
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
@@ -400,20 +469,38 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
                       const isUpdate = parsedType === 'UPDATE_MANUAL';
                       const isDelete = parsedType === 'DELETE_MANUAL';
                       const isDeleteCat = parsedType === 'DELETE_CATEGORY';
-                      const labelText = isCreate ? '매뉴얼 생성 준비됨' : isUpdate ? '매뉴얼 수정 준비됨' : isDelete ? '매뉴얼 삭제 준비됨' : isDeleteCat ? '카테고리 전체 삭제 준비됨' : '작업 준비됨';
+                      const isAnnouncement = parsedType === 'CREATE_ANNOUNCEMENT';
+                      const labelText = isAnnouncement ? '공지사항 등록 준비됨' : isCreate ? '매뉴얼 생성 준비됨' : isUpdate ? '매뉴얼 수정 준비됨' : isDelete ? '매뉴얼 삭제 준비됨' : isDeleteCat ? '카테고리 전체 삭제 준비됨' : '작업 준비됨';
                       const btnColor = (isDelete || isDeleteCat) ? 'bg-red-500 hover:bg-red-600' : isUpdate ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600';
                       const iconColor = (isDelete || isDeleteCat) ? 'text-red-400' : isUpdate ? 'text-amber-400' : 'text-emerald-400';
-                      const btnText = isCreate ? '즉시 생성하기' : isUpdate ? '즉시 수정하기' : (isDelete || isDeleteCat) ? '즉시 삭제하기' : '즉시 적용하기';
+                      const btnText = isAnnouncement ? '즉시 등록하기' : isCreate ? '즉시 생성하기' : isUpdate ? '즉시 수정하기' : (isDelete || isDeleteCat) ? '즉시 삭제하기' : '즉시 적용하기';
+                      const icon = isDelete ? 'delete' : isUpdate ? 'edit' : isAnnouncement ? 'campaign' : 'auto_awesome';
                       return (
                         <div className="mt-2 px-3 py-2 rounded-xl bg-slate-900 text-white space-y-1.5">
                           <div className="flex items-center gap-1.5">
                             <span className={`material-symbols-outlined ${iconColor} text-xs`}>
-                              {isDelete ? 'delete' : isUpdate ? 'edit' : 'auto_awesome'}
+                              {icon}
                             </span>
                             <span className={`text-[9px] font-black ${iconColor} uppercase tracking-widest`}>{labelText}</span>
                           </div>
+
+                          {/* 공지사항: 중요 토글 */}
+                          {isAnnouncement && (
+                            <div className="flex items-center justify-between py-1 border-t border-slate-700">
+                              <span className="text-[10px] font-bold text-slate-400">중요 공지로 등록</span>
+                              <button
+                                onClick={() => setImportantOverrides(prev => ({ ...prev, [idx]: !(prev[idx] ?? false) }))}
+                                className={`relative w-9 h-5 rounded-full transition-all shrink-0 ${(importantOverrides[idx] ?? false) ? 'bg-red-500' : 'bg-slate-700'
+                                  }`}
+                              >
+                                <span className={`absolute top-0.5 size-4 rounded-full bg-white shadow transition-all ${(importantOverrides[idx] ?? false) ? 'left-[18px]' : 'left-0.5'
+                                  }`} />
+                              </button>
+                            </div>
+                          )}
+
                           <button
-                            onClick={() => handleApplyStructure(jsonContent)}
+                            onClick={() => handleApplyStructure(jsonContent, isAnnouncement ? (importantOverrides[idx] ?? false) : undefined)}
                             className={`w-full py-2.5 rounded-xl text-[11px] font-black text-white shadow-lg active:scale-95 transition-all ${btnColor}`}
                             disabled={isApplying}
                           >
@@ -458,7 +545,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
           {/* 텍스트 입력 */}
           <input
             className="flex-1 bg-transparent border-none focus:ring-0 text-[14px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
-            placeholder="업무 방법이 궁금하면 HAEMA에게 물어보세요"
+            placeholder={role === 'admin' ? '매뉴얼을 HAEMA에게 말해보세요.' : '업무 방법이 궁금하면 HAEMA에게 물어보세요.'}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -505,7 +592,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
       {
         showGuide && (
           <div
-            className="fixed inset-0 z-50 flex items-end justify-center"
+            className="fixed inset-x-0 top-0 bottom-16 z-50 flex items-end justify-center"
             onClick={() => setShowGuide(false)}
           >
             {/* 딤드 배경 */}
@@ -513,14 +600,14 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
 
             {/* 시트 본문 */}
             <div
-              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-t-[2rem] px-6 pt-5 pb-10 shadow-2xl"
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-t-[2rem] pt-5 pb-6 shadow-2xl flex flex-col max-h-full"
               onClick={(e) => e.stopPropagation()}
             >
               {/* 핸들 바 */}
-              <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6" />
+              <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6 shrink-0" />
 
-              {/* 헤더 */}
-              <div className="flex items-center justify-between mb-5">
+              {/* 헤더 (고정) */}
+              <div className="flex items-center justify-between mb-5 px-6 shrink-0">
                 <div>
                   <h2 className="text-[17px] font-black text-slate-900 dark:text-white">사용 방법 가이드</h2>
                   <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
@@ -535,8 +622,8 @@ const AIGuide: React.FC<AIGuideProps> = ({ role }) => {
                 </button>
               </div>
 
-              {/* 컨텐츠 */}
-              <div className="space-y-4">
+              {/* 컨텐츠 (스크롤 가능) */}
+              <div className="overflow-y-auto px-6 space-y-4">
                 {role === 'admin' ? (
                   <>
                     {[

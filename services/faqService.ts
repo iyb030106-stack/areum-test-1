@@ -8,9 +8,10 @@ import {
     onSnapshot,
     query,
     orderBy,
-    serverTimestamp,
     Timestamp,
     getDoc,
+    where,
+    serverTimestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -21,20 +22,31 @@ export interface FAQ {
     category: string;
     authorId: string;
     authorName: string;
+    academyId: string;
     createdAt: Timestamp | null;
     updatedAt: Timestamp | null;
 }
 
 /** FAQ 실시간 구독 */
 export const subscribeToFAQs = (
+    academyId: string,
     callback: (faqs: FAQ[]) => void,
 ): (() => void) => {
+    if (!academyId) return () => { };
     const q = query(
         collection(db, 'faqs'),
-        orderBy('createdAt', 'desc'),
+        where('academyId', '==', academyId)
     );
     return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as FAQ[]);
+        const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as FAQ[];
+        items.sort((a, b) => {
+            const tA = a.createdAt?.toMillis() || 0;
+            const tB = b.createdAt?.toMillis() || 0;
+            return tB - tA; // desc
+        });
+        callback(items);
+    }, (error) => {
+        console.error("subscribeToFAQs error:", error);
     });
 };
 

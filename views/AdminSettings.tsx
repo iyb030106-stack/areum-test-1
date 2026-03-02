@@ -19,7 +19,7 @@ const AdminSettings: React.FC = () => {
       items: [
         { label: '관리자 계정 관리', icon: 'admin_panel_settings' },
         { label: '직원 직책/권한 설정', icon: 'manage_accounts' },
-        { label: '초대 코드 생성', icon: 'key' },
+        { label: '학원 고유번호 관리', icon: 'key' },
       ]
     },
     {
@@ -46,7 +46,7 @@ const AdminSettings: React.FC = () => {
             <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-1">{group.title}</h2>
             <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
               {group.items.map((item, j) => (
-                <button 
+                <button
                   key={j}
                   className="w-full flex items-center gap-4 p-5 hover:bg-slate-50 transition-colors border-b last:border-b-0 border-slate-50"
                 >

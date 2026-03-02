@@ -99,7 +99,7 @@ const AnnouncementDetail: React.FC<AnnouncementDetailProps> = ({ role }) => {
           <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-2">
             {announcement.title}
           </h2>
-          <p className="text-xs text-slate-400 font-bold mb-6">작성자: {announcement.authorName}</p>
+          <p className="text-xs text-slate-400 font-bold mb-6">{announcement.authorPosition || '관리자'} · {announcement.authorName}</p>
 
           <div className="h-px w-full bg-white/20 dark:bg-slate-800 mb-8"></div>
 
@@ -110,8 +110,9 @@ const AnnouncementDetail: React.FC<AnnouncementDetailProps> = ({ role }) => {
 
         <button
           onClick={() => navigate(-1)}
-          className="w-full bg-white/60 backdrop-blur-md text-slate-900 py-5 rounded-[2rem] border border-white/40 font-black text-sm active:scale-95 transition-all shadow-sm mt-12"
+          className="flex items-center gap-1.5 px-5 py-2.5 bg-white/60 backdrop-blur-md text-slate-500 rounded-2xl border border-white/40 font-black text-[12px] active:scale-95 transition-all shadow-sm mt-12"
         >
+          <span className="material-symbols-outlined text-[15px]">arrow_back</span>
           목록으로 돌아가기
         </button>
       </main>

@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createFAQ, updateFAQ, getFAQ } from '../services/faqService';
 import { auth } from '../services/firebase';
+import { useAcademy } from '../contexts/AcademyContext';
 
 const FAQEdit: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { academyId } = useAcademy();
     const isEdit = Boolean(id);
 
     const [question, setQuestion] = useState('');
@@ -39,11 +41,13 @@ const FAQEdit: React.FC = () => {
             if (isEdit && id) {
                 await updateFAQ(id, { question, answer, category });
             } else {
+                if (!academyId) throw new Error("academyId is required");
                 const user = auth.currentUser;
                 await createFAQ({
                     question,
                     answer,
                     category,
+                    academyId,
                     authorId: user?.uid || 'unknown',
                     authorName: user?.displayName || '관리자',
                 });
@@ -78,7 +82,7 @@ const FAQEdit: React.FC = () => {
                                     key={cat}
                                     onClick={() => setCategory(cat)}
                                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${category === cat
-                                        ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20'
+                                        ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 dark:bg-white dark:text-slate-900 dark:border-white'
                                         : 'bg-white dark:bg-slate-800 text-slate-400 border-white dark:border-slate-700'}`}
                                 >
                                     {cat}
@@ -93,7 +97,7 @@ const FAQEdit: React.FC = () => {
                             value={question}
                             onChange={(e) => setQuestion(e.target.value)}
                             placeholder="직원들이 자주 묻는 질문을 입력하세요"
-                            className="w-full p-5 rounded-[1.5rem] bg-white dark:bg-slate-900 border border-white/40 dark:border-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5 transition-all font-bold text-slate-900 dark:text-white min-h-[100px]"
+                            className="w-full p-5 rounded-[1.5rem] bg-white dark:bg-slate-900 border border-white/40 dark:border-slate-700 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 transition-all font-bold text-slate-900 dark:text-white min-h-[100px]"
                         />
                     </div>
 
@@ -103,14 +107,14 @@ const FAQEdit: React.FC = () => {
                             value={answer}
                             onChange={(e) => setAnswer(e.target.value)}
                             placeholder="명확하고 친절한 답변을 입력하세요"
-                            className="w-full p-5 rounded-[1.5rem] bg-white dark:bg-slate-900 border border-white/40 dark:border-slate-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5 transition-all font-medium text-slate-700 dark:text-slate-300 min-h-[200px]"
+                            className="w-full p-5 rounded-[1.5rem] bg-white dark:bg-slate-900 border border-white/40 dark:border-slate-700 focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5 transition-all font-medium text-slate-700 dark:text-slate-300 min-h-[200px]"
                         />
                     </div>
                 </section>
 
                 <button
                     onClick={handleSave}
-                    className="w-full bg-amber-500 text-white py-5 rounded-[1.5rem] font-black shadow-xl shadow-amber-500/20 active:scale-95 transition-all text-base"
+                    className="w-full bg-slate-900 text-white py-5 rounded-[1.5rem] font-black shadow-xl shadow-slate-900/20 active:scale-95 transition-all text-base dark:bg-white dark:text-slate-900"
                 >
                     저장하기
                 </button>

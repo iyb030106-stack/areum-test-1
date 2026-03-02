@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserRole } from '../types';
 import { subscribeToManuals, ManualItem, subscribeToCategories, ManualCategory as IManualCategory } from '../services/manualService';
+import { useAcademy } from '../contexts/AcademyContext';
 
 interface ManualCategoryProps {
   role?: UserRole;
@@ -13,15 +14,16 @@ const ManualCategory: React.FC<ManualCategoryProps> = ({ role }) => {
   const navigate = useNavigate();
   const [items, setItems] = useState<ManualItem[]>([]);
   const [categories, setCategories] = useState<IManualCategory[]>([]);
+  const { academyId } = useAcademy();
   const category = categories.find((c) => c.id === catId);
 
   useEffect(() => {
     let unsubDocs: (() => void) | undefined;
     let unsubCats: (() => void) | undefined;
 
-    if (catId) {
-      unsubDocs = subscribeToManuals(catId, setItems);
-      unsubCats = subscribeToCategories(setCategories);
+    if (catId && academyId) {
+      unsubDocs = subscribeToManuals(catId, academyId, setItems);
+      unsubCats = subscribeToCategories(academyId, setCategories);
     }
 
     return () => {

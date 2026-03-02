@@ -94,8 +94,8 @@ export const MANUAL_CATEGORIES: ManualCategory[] = [
     id: 'cat-2',
     name: '평가 · 테스트',
     icon: 'fact_check',
-    colorClass: 'text-emerald-500/80',
-    bgClass: 'bg-emerald-50/50',
+    colorClass: 'text-primary/80',
+    bgClass: 'bg-primary/5',
     type: 'admin',
     order: 1
   },
@@ -103,8 +103,8 @@ export const MANUAL_CATEGORIES: ManualCategory[] = [
     id: 'cat-3',
     name: '학생 관리',
     icon: 'groups',
-    colorClass: 'text-amber-500/80',
-    bgClass: 'bg-amber-50/50',
+    colorClass: 'text-primary/80',
+    bgClass: 'bg-primary/5',
     type: 'admin',
     order: 2
   },
@@ -112,8 +112,8 @@ export const MANUAL_CATEGORIES: ManualCategory[] = [
     id: 'cat-4',
     name: '행정 · 운영',
     icon: 'analytics',
-    colorClass: 'text-slate-500/80',
-    bgClass: 'bg-slate-50/50',
+    colorClass: 'text-primary/80',
+    bgClass: 'bg-primary/5',
     type: 'admin',
     order: 3
   },
@@ -121,8 +121,8 @@ export const MANUAL_CATEGORIES: ManualCategory[] = [
     id: 'cat-5',
     name: '시설 · 시스템',
     icon: 'construction',
-    colorClass: 'text-blue-500/80',
-    bgClass: 'bg-blue-50/50',
+    colorClass: 'text-primary/80',
+    bgClass: 'bg-primary/5',
     type: 'admin',
     order: 4
   }

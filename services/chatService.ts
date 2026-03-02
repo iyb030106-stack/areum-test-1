@@ -27,6 +27,7 @@ export interface ChatRoom {
     participants: string[];
     deletedBy?: string[]; // 삭제를 누른 사용자 ID 목록
     lastMessage: string;
+    academyId: string;
     lastMessageTime: Timestamp | null;
 }
 
@@ -41,6 +42,7 @@ export const sendMessage = async (
     senderId: string,
     senderName: string,
     otherUid: string,
+    academyId: string,
     text: string,
 ): Promise<void> => {
     await addDoc(collection(db, 'chats', chatId, 'messages'), {
@@ -54,6 +56,7 @@ export const sendMessage = async (
         {
             participants: [senderId, otherUid],
             lastMessage: text,
+            academyId,
             lastMessageTime: serverTimestamp(),
             deletedBy: [], // 메시지가 전송되면 양쪽 모두에게 다시 나타나게 함
         },
@@ -76,14 +79,18 @@ export const subscribeToMessages = (
             ...d.data(),
         })) as ChatMessage[];
         callback(messages);
+    }, (error) => {
+        console.error("subscribeToChatMessages error:", error);
     });
 };
 
 /** 특정 유저가 참여한 채팅방 목록 실시간 구독 */
 export const subscribeToUserChats = (
     uid: string,
+    academyId: string,
     callback: (chats: ChatRoom[]) => void,
 ): (() => void) => {
+    if (!academyId) return () => { };
     const q = query(
         collection(db, 'chats'),
         where('participants', 'array-contains', uid)
@@ -95,12 +102,16 @@ export const subscribeToUserChats = (
                 ...d.data(),
             })) as ChatRoom[];
 
+        const filteredChats = chats.filter(c => c.academyId === academyId);
+
         // 내가 삭제하지 않은 채팅방만 필터링
-        const activeChats = chats.filter(chat =>
+        const activeChats = filteredChats.filter(chat =>
             !chat.deletedBy || !chat.deletedBy.includes(uid)
         );
 
         callback(activeChats);
+    }, (error) => {
+        console.error("subscribeToUserChats error:", error);
     });
 };
 
