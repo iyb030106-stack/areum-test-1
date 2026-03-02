@@ -3,16 +3,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HaemaIcon } from '../components/Layout';
 import { subscribeToAllManuals, ManualItem } from '../services/manualService';
+import { useAcademy } from '../contexts/AcademyContext';
 
 const QuickHelp: React.FC = () => {
   const navigate = useNavigate();
+  const { academyId } = useAcademy();
   const [selectedCatId, setSelectedCatId] = useState<string | null>(null);
   const [allManuals, setAllManuals] = useState<ManualItem[]>([]);
 
   useEffect(() => {
-    const unsub = subscribeToAllManuals(setAllManuals);
+    if (!academyId) return;
+    const unsub = subscribeToAllManuals(academyId, setAllManuals);
     return unsub;
-  }, []);
+  }, [academyId]);
 
   const categories = [
     { id: 'equipment', name: '멀티미디어 장애', icon: 'settings_alert', color: 'bg-primary/10 text-primary' },

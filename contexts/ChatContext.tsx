@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { ChatMessage, UserRole } from '../types';
 import { getAIResponseStream } from '../services/geminiService';
+import { auth } from '../services/firebase';
 
 
 interface ChatContextType {
@@ -25,24 +26,34 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isLoading, setIsLoading] = useState(false);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    // 로컬 스토리지에서 초기 데이터 로드
+    // 로컬 스토리지에서 초기 데이터 로드 (현재 사용자/학원 기준)
+    const currentUid = auth.currentUser?.uid;
+    const historyKey = useCallback((role: string) => {
+        return `chat_history_${currentUid}_${role}`;
+    }, [currentUid]);
+
     useEffect(() => {
-        const adminSaved = localStorage.getItem('chat_history_admin');
-        const staffSaved = localStorage.getItem('chat_history_staff');
+        if (!currentUid) return;
+
+        const adminSaved = localStorage.getItem(historyKey('admin'));
+        const staffSaved = localStorage.getItem(historyKey('staff'));
 
         const parse = (saved: string | null): ChatMessage[] => {
             if (!saved) return [];
-            const parsed: ChatMessage[] = JSON.parse(saved);
-            // 이전 세션의 초기 AI 인사 메시지만 있으면 빈 배열로 마이그레이션
-            if (parsed.length === 1 && parsed[0].role === 'model') return [];
-            return parsed;
+            try {
+                const parsed: ChatMessage[] = JSON.parse(saved);
+                if (parsed.length === 1 && parsed[0].role === 'model') return [];
+                return parsed;
+            } catch {
+                return [];
+            }
         };
 
         setMessagesMap({
             admin: parse(adminSaved),
             staff: parse(staffSaved)
         });
-    }, []);
+    }, [currentUid, historyKey]);
 
     const sendMessage = useCallback(async (text: string, role: UserRole, manualContext: string = "") => {
         const timestamp = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
@@ -53,7 +64,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setMessagesMap(prev => {
             const newMsgs = [...(prev[role] || []), userMsg];
             baseMessages = newMsgs;
-            localStorage.setItem(`chat_history_${role}`, JSON.stringify(newMsgs));
+            if (currentUid) localStorage.setItem(historyKey(role), JSON.stringify(newMsgs));
             return { ...prev, [role]: newMsgs };
         });
 
@@ -100,7 +111,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // 4. 완료 후 로컬스토리지 저장
             setMessagesMap(prev => {
                 const finalMsgs = prev[role] || [];
-                localStorage.setItem(`chat_history_${role}`, JSON.stringify(finalMsgs));
+                if (currentUid) localStorage.setItem(historyKey(role), JSON.stringify(finalMsgs));
                 return prev;
             });
 
@@ -110,12 +121,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setMessagesMap(prev => {
                     const msgs = prev[role] || [];
                     if (msgs.length > 0 && msgs[msgs.length - 1].role === 'model' && !msgs[msgs.length - 1].content) {
-                        // 내용 없으면 placeholder 제거
                         const trimmed = msgs.slice(0, -1);
-                        localStorage.setItem(`chat_history_${role}`, JSON.stringify(trimmed));
+                        if (currentUid) localStorage.setItem(historyKey(role), JSON.stringify(trimmed));
                         return { ...prev, [role]: trimmed };
                     }
-                    localStorage.setItem(`chat_history_${role}`, JSON.stringify(msgs));
+                    if (currentUid) localStorage.setItem(historyKey(role), JSON.stringify(msgs));
                     return prev;
                 });
                 return;
@@ -131,7 +141,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         content: "오류가 발생했습니다: " + err.message
                     };
                 }
-                localStorage.setItem(`chat_history_${role}`, JSON.stringify(msgs));
+                if (currentUid) localStorage.setItem(historyKey(role), JSON.stringify(msgs));
                 return { ...prev, [role]: msgs };
             });
         } finally {
@@ -149,9 +159,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const resetChat = useCallback((role: UserRole) => {
         stopMessage();
-        localStorage.setItem(`chat_history_${role}`, JSON.stringify([]));
+        if (currentUid) localStorage.setItem(historyKey(role), JSON.stringify([]));
         setMessagesMap(prev => ({ ...prev, [role]: [] }));
-    }, [stopMessage]);
+    }, [stopMessage, currentUid, historyKey]);
 
     return (
         <ChatContext.Provider value={{

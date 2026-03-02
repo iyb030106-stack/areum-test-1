@@ -6,10 +6,12 @@ import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestor
 import { db } from '../services/firebase';
 import { Announcement, formatTimeAgo } from '../services/announcementService';
 import { subscribeToMyManuals, ManualItem } from '../services/manualService';
+import { useAcademy } from '../contexts/AcademyContext';
 
 const MyActivityDetail: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { academyId } = useAcademy();
   const queryParams = new URLSearchParams(location.search);
   const initialTab = queryParams.get('tab') || 'notices';
   const [activeTab, setActiveTab] = useState<string>(initialTab);
@@ -19,11 +21,12 @@ const MyActivityDetail: React.FC = () => {
 
   useEffect(() => {
     const uid = auth.currentUser?.uid;
-    if (!uid) return;
+    if (!uid || !academyId) return;
 
     // 내가 쓴 공지사항 구독
     const q = query(
       collection(db, 'announcements'),
+      where('academyId', '==', academyId),
       where('authorId', '==', uid),
       orderBy('createdAt', 'desc'),
     );
@@ -32,13 +35,13 @@ const MyActivityDetail: React.FC = () => {
     });
 
     // 내가 편집한 매뉴얼 구독
-    const unsubManuals = subscribeToMyManuals(uid, setMyManuals);
+    const unsubManuals = subscribeToMyManuals(uid, academyId, setMyManuals);
 
     return () => {
       unsubNotices();
       unsubManuals();
     };
-  }, []);
+  }, [academyId]);
 
   return (
     <div className="pb-32 min-h-screen relative">
@@ -76,9 +79,9 @@ const MyActivityDetail: React.FC = () => {
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-widest ${notice.category === '필독' ? 'bg-red-100/50 text-red-600' :
-                        notice.category === '매뉴얼' ? 'bg-blue-100/50 text-blue-600' :
-                          notice.category === '일정' ? 'bg-emerald-100/50 text-emerald-600' :
-                            'bg-slate-100/50 text-slate-600'
+                      notice.category === '매뉴얼' ? 'bg-blue-100/50 text-blue-600' :
+                        notice.category === '일정' ? 'bg-emerald-100/50 text-emerald-600' :
+                          'bg-slate-100/50 text-slate-600'
                       }`}>
                       {notice.category}
                     </span>

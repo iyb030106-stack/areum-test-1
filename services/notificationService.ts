@@ -8,6 +8,7 @@ import {
     onSnapshot,
     serverTimestamp,
     Timestamp,
+    where
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -18,22 +19,31 @@ export interface Notification {
     title: string;
     targetId: string;
     categoryId?: string;
+    academyId: string;
     authorName: string;
     createdAt: Timestamp | null;
 }
 
 /** 알림 구독 (최근 20개) */
 export const subscribeToNotifications = (
+    academyId: string,
     callback: (notifications: Notification[]) => void,
 ): (() => void) => {
+    if (!academyId) return () => { };
     const q = query(
         collection(db, 'notifications'),
-        orderBy('createdAt', 'desc'),
-        limit(20)
+        where('academyId', '==', academyId)
     );
     return onSnapshot(q, (snapshot) => {
         const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Notification[];
-        callback(items);
+        items.sort((a, b) => {
+            const tA = a.createdAt?.toMillis() || 0;
+            const tB = b.createdAt?.toMillis() || 0;
+            return tB - tA; // desc
+        });
+        callback(items.slice(0, 20));
+    }, (error) => {
+        console.error("subscribeToNotifications error:", error);
     });
 };
 

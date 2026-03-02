@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { FirestoreUser } from '../services/authService';
+import { FirestoreUser, subscribeToAllUsers } from '../services/authService';
 import { subscribeToUserChats, deleteChatRoomForUser, ChatRoom as ChatRoomType } from '../services/chatService';
 
 interface ChatListProps {
@@ -17,20 +17,20 @@ const ChatList: React.FC<ChatListProps> = ({ currentUser }) => {
     const [viewMode, setViewMode] = useState<'chats' | 'members'>('chats');
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
-            const list = snapshot.docs.map(d => ({ uid: d.id, ...d.data() })) as FirestoreUser[];
+        if (!currentUser?.academyId) return;
+        const unsubscribe = subscribeToAllUsers(currentUser.academyId, (list) => {
             setMembers(list);
         });
         return unsubscribe;
-    }, []);
+    }, [currentUser?.academyId]);
 
     useEffect(() => {
-        if (!currentUser?.uid) return;
-        const unsubscribe = subscribeToUserChats(currentUser.uid, (chats) => {
+        if (!currentUser?.uid || !currentUser?.academyId) return;
+        const unsubscribe = subscribeToUserChats(currentUser.uid, currentUser.academyId, (chats) => {
             setActiveChats(chats);
         });
         return unsubscribe;
-    }, [currentUser?.uid]);
+    }, [currentUser?.uid, currentUser?.academyId]);
 
     const handleDeleteChat = async (chatId: string, memberName: string, e: React.MouseEvent) => {
         e.stopPropagation();

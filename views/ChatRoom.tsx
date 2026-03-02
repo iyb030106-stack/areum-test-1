@@ -56,10 +56,10 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUser }) => {
     }, [showMenu]);
 
     const handleSend = async () => {
-        if (!input.trim() || !memberId || !otherUser) return;
+        if (!input.trim() || !memberId || !otherUser || !currentUser.academyId) return;
         const text = input.trim();
         setInput('');
-        await sendMessage(chatId, currentUser.uid, currentUser.name, memberId, text);
+        await sendMessage(chatId, currentUser.uid, currentUser.name, memberId, currentUser.academyId, text);
     };
 
     const formatTime = (ts: any) => {

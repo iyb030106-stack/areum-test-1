@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../types';
-import { FirestoreUser, updateUserProfile, deleteUserAccount } from '../services/authService';
+import { FirestoreUser, updateUserProfile, deleteUserAccount, subscribeToAllUsers } from '../services/authService';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Announcement, formatTimeAgo } from '../services/announcementService';
@@ -30,9 +30,10 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
   // Firestore에서 내가 쓴 공지사항 실시간 구독
   const [myNotices, setMyNotices] = useState<Announcement[]>([]);
   useEffect(() => {
-    if (!currentUser?.uid) return;
+    if (!currentUser?.uid || !currentUser.academyId) return;
     const q = query(
       collection(db, 'announcements'),
+      where('academyId', '==', currentUser.academyId),
       where('authorId', '==', currentUser.uid),
       orderBy('createdAt', 'desc'),
     );
@@ -40,15 +41,15 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
       setMyNotices(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Announcement[]);
     });
     return unsub;
-  }, [currentUser?.uid]);
+  }, [currentUser?.uid, currentUser?.academyId]);
 
   // Firestore에서 내가 편집한 매뉴얼 실시간 구독
   const [myManuals, setMyManuals] = useState<ManualItem[]>([]);
   useEffect(() => {
-    if (!currentUser?.uid) return;
-    const unsub = subscribeToMyManuals(currentUser.uid, setMyManuals);
+    if (!currentUser?.uid || !currentUser.academyId) return;
+    const unsub = subscribeToMyManuals(currentUser.uid, currentUser.academyId, setMyManuals);
     return unsub;
-  }, [currentUser?.uid]);
+  }, [currentUser?.uid, currentUser?.academyId]);
 
   // Firestore에서 내가 스크랩한 매뉴얼 실시간 구독
   const [scrappedManuals, setScrappedManuals] = useState<ManualItem[]>([]);
@@ -57,6 +58,13 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
     const unsub = subscribeToScrappedManuals(currentUser.uid, setScrappedManuals);
     return unsub;
   }, [currentUser?.uid, role]);
+
+  // 전체 사용자 목록 실시간 구독
+  const [allUsers, setAllUsers] = useState<FirestoreUser[]>([]);
+  useEffect(() => {
+    const unsub = subscribeToAllUsers(currentUser.academyId || '', setAllUsers);
+    return unsub;
+  }, [currentUser?.academyId]);
 
   // 다크모드 설정
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -194,8 +202,8 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
                 {(() => {
                   const roleName = role === 'admin' ? '관리자' : '직원';
                   const pos = currentUser.position || '';
-                  const base = (pos === roleName || !pos) ? roleName : `${roleName} ${pos}`;
-                  return currentUser.subject ? `${base} · ${currentUser.subject}` : base;
+                  const label = pos ? pos : roleName;
+                  return currentUser.subject ? `${label} · ${currentUser.subject}` : label;
                 })()}
               </p>
               <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
@@ -388,19 +396,79 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
             </div>
           </section>
         )}
+        {/* 멘버 목록 섹션 (카카오톡 스타일) */}
+        <section className="space-y-1">
+          <div className="flex items-center gap-4 px-1 mb-4">
+            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap">Members</h3>
+            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"></div>
+            <span className="text-[10px] font-bold text-slate-300">{allUsers.length}명</span>
+          </div>
 
+          {/* 나 먼저 */}
+          <div className="flex items-center gap-3.5 px-2 py-3">
+            <div className={`relative size-[46px] rounded-[1.2rem] ${currentUser.avatarColor || 'bg-slate-100'} flex items-center justify-center shrink-0 shadow-sm overflow-hidden`}>
+              {currentUser.avatarUrl ? (
+                <img src={currentUser.avatarUrl} alt="me" className="w-full h-full object-cover" />
+              ) : (
+                <span className={`text-lg font-black ${currentUser.avatarTextColor || 'text-slate-400'}`}>{currentUser.initial || currentUser.name?.[0]}</span>
+              )}
+              <div className="absolute bottom-0 inset-x-0 h-[5px] bg-primary/80" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-black text-slate-900 dark:text-white leading-tight">{currentUser.name} <span className="text-primary text-[10px] font-black">나</span></p>
+              <p className="text-[11px] text-slate-400 font-medium">{currentUser.position || (role === 'admin' ? '관리자' : '직원')}</p>
+            </div>
+          </div>
 
+          {/* 관리자 그룹 */}
+          {allUsers.filter(u => u.role === 'admin' && u.uid !== currentUser.uid).length > 0 && (
+            <>
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 px-2 pt-3 pb-1">
+                관리자 {allUsers.filter(u => u.role === 'admin').length}
+              </p>
+              {allUsers.filter(u => u.role === 'admin' && u.uid !== currentUser.uid).map(user => (
+                <div key={user.uid} className="flex items-center gap-3.5 px-2 py-3">
+                  <div className={`size-[46px] rounded-[1.2rem] ${user.avatarColor || 'bg-slate-100'} flex items-center justify-center shrink-0 shadow-sm overflow-hidden`}>
+                    {user.avatarUrl ? (
+                      <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className={`text-lg font-black ${user.avatarTextColor || 'text-slate-400'}`}>{user.initial || user.name?.[0]}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-black text-slate-900 dark:text-white leading-tight">{user.name}</p>
+                    <p className="text-[11px] text-slate-400 font-medium">{user.position || '관리자'}{user.subject ? ` · ${user.subject}` : ''}</p>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
 
-
-        {/* Delete Account Section */}
+          {/* 직원 그룹 */}
+          {allUsers.filter(u => u.role === 'staff').length > 0 && (
+            <>
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 px-2 pt-3 pb-1">
+                직원 {allUsers.filter(u => u.role === 'staff').length}
+              </p>
+              {allUsers.filter(u => u.role === 'staff' && u.uid !== currentUser.uid).map(user => (
+                <div key={user.uid} className="flex items-center gap-3.5 px-2 py-3">
+                  <div className={`size-[46px] rounded-[1.2rem] ${user.avatarColor || 'bg-slate-100'} flex items-center justify-center shrink-0 shadow-sm overflow-hidden`}>
+                    {user.avatarUrl ? (
+                      <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className={`text-lg font-black ${user.avatarTextColor || 'text-slate-400'}`}>{user.initial || user.name?.[0]}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-black text-slate-900 dark:text-white leading-tight">{user.name}</p>
+                    <p className="text-[11px] text-slate-400 font-medium">{user.position || '직원'}{user.subject ? ` · ${user.subject}` : ''}</p>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </section>
         <section className="pt-4 pb-10 px-1 flex flex-col items-center gap-6">
-          <button
-            onClick={handleDeleteAccount}
-            className="text-[10px] text-slate-300 dark:text-slate-600 font-bold underline underline-offset-4 active:text-slate-400 dark:active:text-slate-500 transition-all opacity-70 hover:opacity-100"
-          >
-            탈퇴하기
-          </button>
-
           <div className="flex flex-col items-center gap-1">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-50">Areum Edu Partners</p>
             <p className="text-[9px] text-slate-300 font-bold uppercase tracking-[0.2em] opacity-40">System Version 1.2.0</p>

@@ -17,6 +17,7 @@ import Login from './views/Login';
 import AdminDashboard from './views/AdminDashboard';
 import AdminStaff from './views/AdminStaff';
 import Settings from './views/Settings';
+import SettingsDetail from './views/SettingsDetail';
 import ManualEdit from './views/ManualEdit';
 import AnnouncementEdit from './views/AnnouncementEdit';
 import MyActivityDetail from './views/MyActivityDetail';
@@ -27,6 +28,7 @@ import ChatList from './views/ChatList';
 import { UserRole } from './types';
 import { MANUAL_CATEGORIES } from './constants';
 import { initializeCategoriesIfNeeded } from './services/manualService';
+import { AcademyProvider } from './contexts/AcademyContext';
 
 const SplashScreen = () => (
   <div className="animate-splash-fade-out relative flex min-h-screen w-full max-w-md mx-auto flex-col items-center justify-center overflow-hidden bg-[#010309]">
@@ -44,17 +46,17 @@ const SplashScreen = () => (
     {/* 심해 거품 애니메이션 */}
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {[...Array(8)].map((_, i) => (
-        <div 
+        <div
           key={i}
           className="bubble-anim absolute border border-white/20 bg-white/5 rounded-full"
-          style={{ 
-            width: `${8 + (i * 4)}px`, 
+          style={{
+            width: `${8 + (i * 4)}px`,
             height: `${8 + (i * 4)}px`,
             left: `${(i * 15) % 100}%`,
             top: '100%',
             animationDelay: `${i * 1.2}s`,
             animationDuration: `${6 + (i % 3) * 2}s, 3s`
-          }} 
+          }}
         />
       ))}
     </div>
@@ -114,18 +116,26 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        if (pendingUserDataRef.current) {
-          setCurrentUser(pendingUserDataRef.current);
-          pendingUserDataRef.current = null;
+      try {
+        if (firebaseUser) {
+          if (pendingUserDataRef.current) {
+            setCurrentUser(pendingUserDataRef.current);
+            pendingUserDataRef.current = null;
+          } else {
+            const userData = await getUserData(firebaseUser.uid);
+            setCurrentUser(userData);
+          }
         } else {
-          const userData = await getUserData(firebaseUser.uid);
-          setCurrentUser(userData);
+          setCurrentUser(null);
         }
-      } else {
+      } catch (err: any) {
+        console.error("Auth initialization error:", err);
+        // 400 에러나 권한 에러 발생 시 세션 초기화
+        await auth.signOut();
         setCurrentUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsubscribe;
   }, []);
@@ -143,13 +153,13 @@ const App: React.FC = () => {
     );
   }
 
-  if (!currentUser) {
+  if (!currentUser || !currentUser.academyId) {
     return (
       <div className="min-h-screen bg-slate-200 dark:bg-slate-900 flex items-start justify-center">
         <div className="w-full max-w-md min-h-screen bg-slate-50 dark:bg-slate-950 shadow-2xl overflow-hidden relative">
           <Router>
             <Routes>
-              <Route path="/login" element={<Login onLogin={(userData) => { pendingUserDataRef.current = userData; setCurrentUser(userData); }} />} />
+              <Route path="/login" element={<Login onLogin={(userData) => { pendingUserDataRef.current = userData; setCurrentUser(userData); }} initialPendingUser={currentUser} />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </Router>
@@ -161,44 +171,47 @@ const App: React.FC = () => {
   const role = currentUser.role as UserRole;
 
   return (
-    <ChatProvider>
-      <Router>
-        <Layout role={role} onLogout={handleLogout}>
-          <Routes>
-            <Route path="/" element={<AIGuide role={role} />} />
-            <Route path="/home" element={<Home role={role} />} />
-            <Route path="/subject-manuals" element={<Navigate to="/home" replace />} />
-            <Route path="/ai" element={<Navigate to="/" replace />} />
-            {/* ... 나머지 라우트들 ... */}
-            <Route path="/announcements" element={<Announcements role={role} />} />
-            <Route path="/announcements/:id" element={<AnnouncementDetail role={role} />} />
-            <Route path="/announcements/new" element={<AnnouncementEdit />} />
-            <Route path="/announcements/:id/edit" element={<AnnouncementEdit />} />
-            <Route path="/faq" element={<FAQList role={role} />} />
-            <Route path="/faq/new" element={<FAQEdit />} />
-            <Route path="/faq/:id/edit" element={<FAQEdit />} />
-            <Route path="/mypage" element={<StoreInfo role={role} currentUser={currentUser} onLogout={handleLogout} />} />
-            <Route path="/mypage/activity" element={<MyActivityDetail />} />
-            <Route path="/chat" element={<ChatList currentUser={currentUser} />} />
-            <Route path="/chat/:memberId" element={<ChatRoom currentUser={currentUser} />} />
-            <Route path="/manuals/:catId" element={<ManualCategory role={role} />} />
-            <Route path="/manuals/:catId/new" element={<ManualEdit />} />
-            <Route path="/manuals/:catId/:taskId" element={<TaskDetail role={role} currentUser={currentUser} />} />
-            <Route path="/manuals/:catId/:taskId/edit" element={<ManualEdit />} />
+    <AcademyProvider academyId={currentUser.academyId}>
+      <ChatProvider>
+        <Router>
+          <Layout role={role} onLogout={handleLogout}>
+            <Routes>
+              <Route path="/" element={<AIGuide role={role} currentUser={currentUser} />} />
+              <Route path="/home" element={<Home role={role} />} />
+              <Route path="/subject-manuals" element={<Navigate to="/home" replace />} />
+              <Route path="/ai" element={<Navigate to="/" replace />} />
+              {/* ... 나머지 라우트들 ... */}
+              <Route path="/announcements" element={<Announcements role={role} />} />
+              <Route path="/announcements/:id" element={<AnnouncementDetail role={role} />} />
+              <Route path="/announcements/new" element={role === 'admin' ? <AnnouncementEdit /> : <Navigate to="/announcements" replace />} />
+              <Route path="/announcements/:id/edit" element={role === 'admin' ? <AnnouncementEdit /> : <Navigate to="/announcements" replace />} />
+              <Route path="/faq" element={<FAQList role={role} />} />
+              <Route path="/faq/new" element={role === 'admin' ? <FAQEdit /> : <Navigate to="/faq" replace />} />
+              <Route path="/faq/:id/edit" element={role === 'admin' ? <FAQEdit /> : <Navigate to="/faq" replace />} />
+              <Route path="/mypage" element={<StoreInfo role={role} currentUser={currentUser} onLogout={handleLogout} />} />
+              <Route path="/mypage/activity" element={<MyActivityDetail />} />
+              <Route path="/chat" element={<ChatList currentUser={currentUser} />} />
+              <Route path="/chat/:memberId" element={<ChatRoom currentUser={currentUser} />} />
+              <Route path="/manuals/:catId" element={<ManualCategory role={role} />} />
+              <Route path="/manuals/:catId/new" element={role === 'admin' ? <ManualEdit /> : <Navigate to="/home" replace />} />
+              <Route path="/manuals/:catId/:taskId" element={<TaskDetail role={role} currentUser={currentUser} />} />
+              <Route path="/manuals/:catId/:taskId/edit" element={role === 'admin' ? <ManualEdit /> : <Navigate to="/home" replace />} />
 
-            <Route path="/settings" element={<Settings role={role} onLogout={handleLogout} />} />
+              <Route path="/settings" element={<Settings role={role} onLogout={handleLogout} />} />
+              <Route path="/settings/:panel" element={<SettingsDetail />} />
 
-            {role === 'admin' && (
-              <>
-                <Route path="/admin/staff" element={<AdminStaff />} />
-              </>
-            )}
+              {role === 'admin' && (
+                <>
+                  <Route path="/admin/staff" element={<AdminStaff />} />
+                </>
+              )}
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Layout>
-      </Router>
-    </ChatProvider>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Layout>
+        </Router>
+      </ChatProvider>
+    </AcademyProvider>
   );
 };
 

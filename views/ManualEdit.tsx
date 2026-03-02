@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getManualItem, createManualItem, updateManualItem } from '../services/manualService';
 import { auth } from '../services/firebase';
+import { useAcademy } from '../contexts/AcademyContext';
 
 const AVAILABLE_ICONS = [
   'description', 'menu_book', 'library_books', 'sticky_note_2',
@@ -18,6 +19,7 @@ const AVAILABLE_ICONS = [
 const ManualEdit: React.FC = () => {
   const { catId, taskId } = useParams<{ catId: string; taskId: string }>();
   const navigate = useNavigate();
+  const { academyId } = useAcademy();
   const isEdit = !!taskId && taskId !== 'new';
 
   const [title, setTitle] = useState('');
@@ -48,7 +50,7 @@ const ManualEdit: React.FC = () => {
   }, [taskId, isEdit]);
 
   const handleSave = async () => {
-    if (!title.trim() || !catId) return;
+    if (!title.trim() || !catId || !academyId) return;
     setLoading(true);
     try {
       const user = auth.currentUser;
@@ -66,6 +68,7 @@ const ManualEdit: React.FC = () => {
           steps: validSteps,
           lastEditedBy: editedBy,
           lastEditedByName: editedByName,
+          academyId
         });
         navigate(`/manuals/${catId}/${taskId}`, { replace: true });
       } else {
@@ -80,6 +83,7 @@ const ManualEdit: React.FC = () => {
           steps: validSteps,
           lastEditedBy: editedBy,
           lastEditedByName: editedByName,
+          academyId
         });
         navigate(`/manuals/${catId}/${newId}`, { replace: true });
       }
@@ -190,8 +194,8 @@ const ManualEdit: React.FC = () => {
                       type="button"
                       onClick={() => setIcon(iconName)}
                       className={`flex items-center justify-center p-3 rounded-xl transition-all active:scale-95 ${icon === iconName
-                          ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
-                          : 'bg-white text-slate-400 hover:bg-slate-50 hover:text-slate-600 border border-slate-100'
+                        ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
+                        : 'bg-white text-slate-400 hover:bg-slate-50 hover:text-slate-600 border border-slate-100'
                         }`}
                       title={iconName}
                     >

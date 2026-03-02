@@ -11,6 +11,7 @@ import {
   deleteManualCategory
 } from '../services/manualService';
 import { UserRole } from '../types';
+import { useAcademy } from '../contexts/AcademyContext';
 
 interface SubjectManualsProps {
   role?: UserRole;
@@ -25,6 +26,7 @@ const CATEGORY_ICONS = [
 
 const SubjectManuals: React.FC<SubjectManualsProps> = ({ role }) => {
   const navigate = useNavigate();
+  const { academyId, academyName } = useAcademy();
   const [searchQuery, setSearchQuery] = useState('');
   const [allManuals, setAllManuals] = useState<ManualItem[]>([]);
   const [categories, setCategories] = useState<ManualCategory[]>([]);
@@ -36,13 +38,14 @@ const SubjectManuals: React.FC<SubjectManualsProps> = ({ role }) => {
   const [newCatIcon, setNewCatIcon] = useState('folder');
 
   useEffect(() => {
-    const unsubDocs = subscribeToAllManuals(setAllManuals);
-    const unsubCats = subscribeToCategories(setCategories);
+    if (!academyId) return;
+    const unsubDocs = subscribeToAllManuals(academyId, setAllManuals);
+    const unsubCats = subscribeToCategories(academyId, setCategories);
     return () => {
       unsubDocs();
       unsubCats();
     };
-  }, []);
+  }, [academyId]);
 
   const subjectCategories = categories.filter(c => c.type === 'subject');
   const MANUAL_CATEGORIES_FOR_FILTER = categories; // 검색 필터용
@@ -57,11 +60,12 @@ const SubjectManuals: React.FC<SubjectManualsProps> = ({ role }) => {
   }, [searchQuery, allManuals, MANUAL_CATEGORIES_FOR_FILTER]);
 
   const handleAddCategory = async () => {
-    if (!newCatName.trim()) return;
+    if (!newCatName.trim() || !academyId) return;
     await createManualCategory({
       name: newCatName,
       icon: newCatIcon,
       type: 'subject',
+      academyId,
       order: subjectCategories.length,
       colorClass: 'text-emerald-500/80',
       bgClass: 'bg-emerald-50/50'
@@ -100,7 +104,12 @@ const SubjectManuals: React.FC<SubjectManualsProps> = ({ role }) => {
     <div className="pb-40 min-h-screen relative">
       <header className="px-6 pt-14 pb-2 flex items-center justify-between relative z-10">
         <div>
-          <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+          <div className="flex items-baseline gap-2">
+            <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+            {academyName && academyName !== 'HAEMA' && (
+              <span className="text-[10px] font-black text-slate-400 tracking-wider">{academyName}</span>
+            )}
+          </div>
           <p className="text-sm font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mt-1.5">운영 노하우</p>
         </div>
       </header>
@@ -241,11 +250,11 @@ const SubjectManuals: React.FC<SubjectManualsProps> = ({ role }) => {
                     onClick={() => !isManaging && navigate(`/manuals/${cat.id}`)}
                     className={`h-full bg-white/55 backdrop-blur-md dark:bg-slate-900/55 p-6 rounded-[2.5rem] border border-white/40 shadow-sm transition-all flex flex-col items-center text-center gap-4 ${isManaging ? 'opacity-50 grayscale' : 'hover:shadow-xl cursor-pointer active:scale-95'}`}
                   >
-                    <div className={`size-14 rounded-3xl ${cat.bgClass} flex items-center justify-center shadow-inner`}>
+                    <div className={`size-14 rounded-full bg-primary/5 dark:bg-primary/20 flex flex-col items-center justify-center shadow-inner`}>
                       {cat.icon === 'Aa' ? (
-                        <span className={`${cat.colorClass} text-xl font-black`}>Aa</span>
+                        <span className={`text-primary/80 dark:text-primary-light text-xl font-black`}>Aa</span>
                       ) : (
-                        <span className={`material-symbols-outlined ${cat.colorClass} text-3xl`}>{cat.icon}</span>
+                        <span className={`material-symbols-outlined text-primary/80 dark:text-primary-light text-3xl`}>{cat.icon}</span>
                       )}
                     </div>
                     {editingCatId === cat.id ? (

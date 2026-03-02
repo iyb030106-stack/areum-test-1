@@ -5,7 +5,7 @@ import {
     deleteUser,
     User,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, getDocs, deleteDoc, collection, onSnapshot, orderBy, query, where, Timestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserRole } from '../types';
 
@@ -20,6 +20,7 @@ export interface FirestoreUser {
     avatarTextColor: string;
     initial: string;
     avatarUrl?: string;
+    academyId?: string;
     createdAt: Timestamp;
 }
 
@@ -46,20 +47,23 @@ export const loginUser = async (
 ): Promise<{ user: User; userData: FirestoreUser }> => {
     const credential = await signInWithEmailAndPassword(auth, email, password);
     const snap = await getDoc(doc(db, 'users', credential.user.uid));
-    if (!snap.exists()) throw new Error('사용자 정보를 찾을 수 없습니다.');
+    if (!snap.exists()) {
+        throw new Error('user-not-found');
+    }
     return {
         user: credential.user,
         userData: { uid: credential.user.uid, ...snap.data() } as FirestoreUser,
     };
 };
 
-/** 새 계정 생성 (회원가입) */
+/** 새 계정 생성 (회원가입) - academyId가 있을 때만 최종 생성 */
 export const registerUser = async (
     email: string,
     password: string,
     name: string,
     role: UserRole,
     position: string,
+    academyId?: string,
     subject?: string,
 ): Promise<FirestoreUser> => {
     const credential = await createUserWithEmailAndPassword(auth, email, password);
@@ -72,7 +76,8 @@ export const registerUser = async (
         subject: subject || '',
         avatarColor: colors.bg,
         avatarTextColor: colors.text,
-        initial: name.charAt(0),
+        initial: name.charAt(0).toUpperCase(),
+        academyId: academyId || (role === 'admin' ? '' : null),
         createdAt: Timestamp.now(),
     };
     await setDoc(doc(db, 'users', credential.user.uid), userData);
@@ -104,10 +109,64 @@ export const deleteUserAccount = async (uid: string): Promise<void> => {
     const user = auth.currentUser;
     if (!user || user.uid !== uid) throw new Error('인증된 사용자가 아닙니다.');
 
-    // 1. Firestore 유저 데이터 삭제
+    // 1. 유저 데이터 먼저 삭제
     await deleteDoc(doc(db, 'users', uid));
 
-    // 2. Firebase Auth 계정 삭제
-    // 참고: 보안상 최근 로그인하지 않은 경우 재인증 오류가 날 수 있음
-    await deleteUser(user);
+    // 2. 로그아웃 수행 (영속성 토큰 제거를 위해 삭제 전 수행 고려)
+    // 단, deleteUser 자체가 로그아웃을 포함하므로 순서가 중요함.
+    // 여기서는 삭제 먼저 하고, 실패 시 로그아웃만이라도 하도록 처리.
+    try {
+        await deleteUser(user);
+    } catch (e) {
+        await signOut(auth); // 삭제 실패하더라도 로컬 세션이라도 정리
+        throw e;
+    }
+};
+
+/** 전체 사용자 목록 실시간 구독 (가입 날짜 오름차순) */
+export const subscribeToAllUsers = (
+    academyId: string,
+    callback: (users: FirestoreUser[]) => void
+): (() => void) => {
+    if (!academyId) return () => { };
+    const q = query(collection(db, 'users'), where('academyId', '==', academyId));
+    return onSnapshot(q, (snap) => {
+        const users = snap.docs.map(d => ({ uid: d.id, ...d.data() })) as FirestoreUser[];
+        users.sort((a, b) => {
+            const tA = (a.createdAt as any)?.toMillis?.() || 0;
+            const tB = (b.createdAt as any)?.toMillis?.() || 0;
+            return tA - tB; // asc
+        });
+        callback(users);
+    }, (error) => {
+        console.error("subscribeToAllUsers error:", error);
+    });
+};
+
+/** 학원 고유번호로 학원 찾기 */
+export const findAcademyByInviteCode = async (code: string): Promise<string | null> => {
+    const q = query(collection(db, 'academies'), where('inviteCode', '==', code));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return snap.docs[0].id;
+};
+
+/** 유일한 학원 고유번호 생성 (중복 체크 포함) */
+export const generateUniqueInviteCode = async (length: number = 10): Promise<string> => {
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let attempts = 0;
+    while (attempts < 10) {
+        attempts++;
+        let code = '';
+        for (let i = 0; i < length; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        // 중복 체크
+        const q = query(collection(db, 'academies'), where('inviteCode', '==', code));
+        const snap = await getDocs(q);
+        if (snap.empty) return code;
+    }
+    // 극악의 확률로 실패 시 타임스탬프 기반 생성
+    return 'AC' + Date.now().toString(36).toUpperCase();
 };

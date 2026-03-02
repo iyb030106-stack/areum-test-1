@@ -9,10 +9,12 @@ import {
   subscribeToNoticeCategories,
   NoticeCategory
 } from '../services/announcementService';
+import { useAcademy } from '../contexts/AcademyContext';
 
 const AnnouncementEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { academyId } = useAcademy();
   const isEdit = !!id && id !== 'new';
 
   const [title, setTitle] = useState('');
@@ -25,14 +27,15 @@ const AnnouncementEdit: React.FC = () => {
 
   // 카테고리 불러오기
   useEffect(() => {
-    const unsubscribe = subscribeToNoticeCategories((data) => {
+    if (!academyId) return;
+    const unsubscribe = subscribeToNoticeCategories(academyId, (data) => {
       setCategories(data);
       if (!category && data.length > 0) {
         setCategory(data[0].name);
       }
     });
     return unsubscribe;
-  }, [category]);
+  }, [category, academyId]);
 
   // 수정 모드: 기존 데이터 불러오기
   useEffect(() => {
@@ -52,7 +55,7 @@ const AnnouncementEdit: React.FC = () => {
   }, [id, isEdit]);
 
   const handleSave = async () => {
-    if (!title.trim() || !description.trim()) return;
+    if (!title.trim() || !description.trim() || !academyId) return;
     const user = auth.currentUser;
     if (!user) return;
 
@@ -70,12 +73,11 @@ const AnnouncementEdit: React.FC = () => {
           description,
           category,
           isImportant,
+          academyId,
           authorId: user.uid,
           authorName: userData?.name || user.displayName || '관리자',
           authorPosition: position,
           authorInitial: (userData?.name || user.displayName || '관')[0],
-          createdAt: null,
-          updatedAt: null
         });
       }
       navigate('/announcements', { replace: true });

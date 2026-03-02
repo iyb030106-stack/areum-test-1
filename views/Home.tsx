@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { MANUAL_CATEGORIES } from '../constants';
 import { HaemaIcon } from '../components/Layout';
 import { UserRole } from '../types';
+import { db, auth } from '../services/firebase';
 import {
   subscribeToAllManuals,
   ManualItem,
@@ -15,6 +16,7 @@ import {
   initializeCategoriesIfNeeded
 } from '../services/manualService';
 import { subscribeToNotifications, Notification, formatNotificationTime } from '../services/notificationService';
+import { useAcademy } from '../contexts/AcademyContext';
 
 interface HomeProps {
   role?: UserRole;
@@ -29,6 +31,7 @@ const CATEGORY_ICONS = [
 
 const Home: React.FC<HomeProps> = ({ role }) => {
   const navigate = useNavigate();
+  const { academyId, academyName } = useAcademy();
   const [searchQuery, setSearchQuery] = useState('');
 
   const [allManuals, setAllManuals] = useState<ManualItem[]>([]);
@@ -45,31 +48,38 @@ const Home: React.FC<HomeProps> = ({ role }) => {
   // 알림 드로어 상태
   const [isNotiOpen, setIsNotiOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [lastReadNoti, setLastReadNoti] = useState<number>(() => {
-    const saved = localStorage.getItem('lastReadNotiTime');
-    return saved ? parseInt(saved, 10) : 0;
-  });
+  const [lastReadNoti, setLastReadNoti] = useState<number>(0);
+
+  useEffect(() => {
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      const saved = localStorage.getItem(`lastReadNotiTime_${uid}`);
+      setLastReadNoti(saved ? parseInt(saved, 10) : 0);
+    }
+  }, []);
 
   const hasUnread = useMemo(() => {
     if (notifications.length === 0) return false;
-    const latestNotiTime = notifications[0].createdAt?.toDate().getTime() || 0;
+    const latestNotiTime = notifications[0].createdAt?.toDate()?.getTime() || 0;
     return latestNotiTime > lastReadNoti;
   }, [notifications, lastReadNoti]);
 
   const handleOpenNoti = () => {
     setIsNotiOpen(true);
     const now = Date.now();
+    const uid = auth.currentUser?.uid;
     setLastReadNoti(now);
-    localStorage.setItem('lastReadNotiTime', now.toString());
+    if (uid) localStorage.setItem(`lastReadNotiTime_${uid}`, now.toString());
   };
 
   useEffect(() => {
-    const unsubDocs = subscribeToAllManuals(setAllManuals);
-    const unsubCats = subscribeToCategories(setCategories);
-    const unsubNotis = subscribeToNotifications(setNotifications);
+    if (!academyId) return;
+    const unsubDocs = subscribeToAllManuals(academyId, setAllManuals);
+    const unsubCats = subscribeToCategories(academyId, setCategories);
+    const unsubNotis = subscribeToNotifications(academyId, setNotifications);
 
     if (role === 'admin') {
-      initializeCategoriesIfNeeded(MANUAL_CATEGORIES);
+      initializeCategoriesIfNeeded(academyId, MANUAL_CATEGORIES);
     }
 
     return () => {
@@ -77,10 +87,10 @@ const Home: React.FC<HomeProps> = ({ role }) => {
       unsubCats();
       unsubNotis();
     };
-  }, [role]);
+  }, [role, academyId]);
 
   const adminCategories = categories.filter(c => c.type === 'admin');
-  
+
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
@@ -91,11 +101,12 @@ const Home: React.FC<HomeProps> = ({ role }) => {
   }, [searchQuery, allManuals]);
 
   const handleAddCategory = async (type: 'admin' | 'subject' = 'admin') => {
-    if (!newCatName.trim()) return;
+    if (!newCatName.trim() || !academyId) return;
     await createManualCategory({
       name: newCatName,
       icon: newCatIcon,
       type,
+      academyId,
       order: type === 'admin' ? adminCategories.length : categories.filter(c => c.type === 'subject').length,
       colorClass: type === 'admin' ? 'text-slate-500/80' : 'text-emerald-500/80',
       bgClass: type === 'admin' ? 'bg-slate-50/50' : 'bg-emerald-50/50'
@@ -132,7 +143,12 @@ const Home: React.FC<HomeProps> = ({ role }) => {
 
       <header className="px-6 pt-14 pb-2 flex items-center justify-between relative z-10">
         <div>
-          <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+          <div className="flex items-baseline gap-2">
+            <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+            {academyName && academyName !== 'HAEMA' && (
+              <span className="text-[10px] font-black text-slate-400 tracking-wider">{academyName}</span>
+            )}
+          </div>
           <p className="text-sm font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mt-1.5">매뉴얼</p>
         </div>
         {role === 'admin' && (
@@ -160,7 +176,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
             <span className="material-symbols-outlined pl-5 text-slate-300">search</span>
             <input
               className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-4.5 px-3 font-bold dark:text-white"
-              placeholder="필요한 정보를 검색하세요"
+              placeholder="필요한 매뉴얼을 검색하세요."
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -280,11 +296,11 @@ const Home: React.FC<HomeProps> = ({ role }) => {
                       onClick={() => !isManaging && navigate(`/manuals/${cat.id}`)}
                       className={`h-full bg-gradient-to-br from-white/50 via-white/30 to-white/50 backdrop-blur-3xl dark:from-white/10 dark:to-white/5 py-4 px-3 rounded-xl border border-white/70 transition-all flex flex-col items-center text-center gap-0 shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.9),inset_0_-1px_1px_rgba(0,0,0,0.05)] ${isManaging ? 'opacity-50 grayscale' : 'cursor-pointer active:scale-95'}`}
                     >
-                      <div className={`size-14 rounded-3xl ${cat.bgClass} flex items-center justify-center`}>
+                      <div className={`size-14 rounded-full bg-primary/5 dark:bg-primary/20 flex flex-col items-center justify-center shadow-inner mb-2`}>
                         {cat.icon === 'Aa' ? (
-                          <span className={`${cat.colorClass} text-xl font-black`}>Aa</span>
+                          <span className={`text-primary/80 dark:text-primary-light text-xl font-black`}>Aa</span>
                         ) : (
-                          <span className={`material-symbols-outlined ${cat.colorClass} text-3xl`}>{cat.icon}</span>
+                          <span className={`material-symbols-outlined text-primary/80 dark:text-primary-light text-3xl`}>{cat.icon}</span>
                         )}
                       </div>
                       <span className="text-xs font-black text-slate-800 dark:text-slate-100 tracking-tight drop-shadow-sm">{cat.name}</span>
@@ -308,9 +324,9 @@ const Home: React.FC<HomeProps> = ({ role }) => {
                     )}
                   </div>
                 ))}
-                
+
                 {isManaging && role === 'admin' && !showAddForm && !editingCatId && (
-                  <div 
+                  <div
                     onClick={() => setShowAddForm(true)}
                     className="h-full min-h-[140px] bg-slate-50/50 dark:bg-slate-900/30 border-2 border-dashed border-slate-200 dark:border-slate-800 py-4 px-3 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all text-slate-400 hover:text-primary hover:border-primary/50"
                   >

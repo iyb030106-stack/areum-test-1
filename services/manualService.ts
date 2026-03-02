@@ -26,12 +26,15 @@ export interface ManualCategory {
     bgClass: string;
     type: 'admin' | 'subject';
     order: number;
+    academyId: string;
     createdAt?: Timestamp | null;
 }
 
 /** 카테고리 초기화 (필요시) */
-export const initializeCategoriesIfNeeded = async (initialCategories: any[]): Promise<void> => {
-    const snap = await getDocs(collection(db, 'manualCategories'));
+export const initializeCategoriesIfNeeded = async (academyId: string, initialCategories: any[]): Promise<void> => {
+    if (!academyId) return;
+    const q = query(collection(db, 'manualCategories'), where('academyId', '==', academyId));
+    const snap = await getDocs(q);
     if (snap.empty) {
         const batch = writeBatch(db);
         initialCategories.forEach((cat, index) => {
@@ -40,6 +43,7 @@ export const initializeCategoriesIfNeeded = async (initialCategories: any[]): Pr
             batch.set(ref, {
                 ...data,
                 order: index,
+                academyId,
                 createdAt: serverTimestamp(),
             });
         });
@@ -49,11 +53,25 @@ export const initializeCategoriesIfNeeded = async (initialCategories: any[]): Pr
 
 /** 카테고리 실시간 구독 */
 export const subscribeToCategories = (
+    academyId: string,
     callback: (categories: ManualCategory[]) => void,
 ): (() => void) => {
-    const q = query(collection(db, 'manualCategories'), orderBy('order', 'asc'));
+    if (!academyId) return () => { };
+    const q = query(
+        collection(db, 'manualCategories'),
+        where('academyId', '==', academyId)
+    );
     return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ManualCategory[]);
+        const rawItems = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ManualCategory[];
+        const map = new Map<string, ManualCategory>();
+        rawItems.forEach(item => {
+            if (!map.has(item.name)) map.set(item.name, item);
+        });
+        const items = Array.from(map.values());
+        items.sort((a, b) => (a.order || 0) - (b.order || 0));
+        callback(items);
+    }, (error) => {
+        console.error("subscribeToCategories error:", error);
     });
 };
 
@@ -76,14 +94,25 @@ export const updateManualCategory = async (
     await updateDoc(doc(db, 'manualCategories', id), data);
 };
 
-/** 카테고리 삭제 (해당 카테고리의 매뉴얼 아이템도 함께 삭제) */
+/** 카테고리 삭제 (해당 카테고리의 매뉴얼 아이템 및 알림도 함께 삭제) */
 export const deleteManualCategory = async (id: string): Promise<void> => {
-    // 해당 카테고리의 매뉴얼 아이템 삭제
+    const batch = writeBatch(db);
+
+    // 1. 해당 카테고리의 매뉴얼 아이템들 찾기
     const itemsSnap = await getDocs(
         query(collection(db, 'manualItems'), where('categoryId', '==', id))
     );
-    const batch = writeBatch(db);
-    itemsSnap.docs.forEach((d) => batch.delete(d.ref));
+
+    for (const itemDoc of itemsSnap.docs) {
+        // 2. 각 매뉴얼 아이템의 알림들 삭제
+        const notiSnap = await getDocs(query(collection(db, 'notifications'), where('targetId', '==', itemDoc.id)));
+        notiSnap.docs.forEach(d => batch.delete(d.ref));
+
+        // 3. 매뉴얼 아이템 원본 삭제
+        batch.delete(itemDoc.ref);
+    }
+
+    // 4. 카테고리 삭제
     batch.delete(doc(db, 'manualCategories', id));
     await batch.commit();
 };
@@ -100,6 +129,7 @@ export interface ManualItem {
     steps: string[];
     lastEditedBy?: string;
     lastEditedByName?: string;
+    academyId: string;
     createdAt: Timestamp | null;
     updatedAt: Timestamp | null;
 }
@@ -107,40 +137,73 @@ export interface ManualItem {
 /** 카테고리별 매뉴얼 실시간 구독 */
 export const subscribeToManuals = (
     categoryId: string,
+    academyId: string,
     callback: (items: ManualItem[]) => void,
 ): (() => void) => {
+    if (!academyId) return () => { };
     const q = query(
         collection(db, 'manualItems'),
-        where('categoryId', '==', categoryId),
-        orderBy('createdAt', 'desc'),
+        where('academyId', '==', academyId),
+        where('categoryId', '==', categoryId)
     );
     return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ManualItem[]);
+        const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ManualItem[];
+        items.sort((a, b) => {
+            const tA = a.createdAt?.toMillis() || 0;
+            const tB = b.createdAt?.toMillis() || 0;
+            return tB - tA; // desc
+        });
+        callback(items);
+    }, (error) => {
+        console.error("subscribeToManuals error:", error);
     });
 };
 
 /** 전체 매뉴얼 실시간 구독 (검색용) */
 export const subscribeToAllManuals = (
+    academyId: string,
     callback: (items: ManualItem[]) => void,
 ): (() => void) => {
-    const q = query(collection(db, 'manualItems'), orderBy('createdAt', 'desc'));
+    if (!academyId) return () => { };
+    const q = query(
+        collection(db, 'manualItems'),
+        where('academyId', '==', academyId)
+    );
     return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ManualItem[]);
+        const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ManualItem[];
+        items.sort((a, b) => {
+            const tA = a.createdAt?.toMillis() || 0;
+            const tB = b.createdAt?.toMillis() || 0;
+            return tB - tA; // desc
+        });
+        callback(items);
+    }, (error) => {
+        console.error("subscribeToAllManuals error:", error);
     });
 };
 
 /** 내가 편집한 매뉴얼 실시간 구독 */
 export const subscribeToMyManuals = (
     uid: string,
+    academyId: string,
     callback: (items: ManualItem[]) => void,
 ): (() => void) => {
+    if (!academyId) return () => { };
     const q = query(
         collection(db, 'manualItems'),
-        where('lastEditedBy', '==', uid),
-        orderBy('updatedAt', 'desc'),
+        where('academyId', '==', academyId),
+        where('lastEditedBy', '==', uid)
     );
     return onSnapshot(q, (snapshot) => {
-        callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ManualItem[]);
+        const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ManualItem[];
+        items.sort((a, b) => {
+            const tA = a.updatedAt?.toMillis() || 0;
+            const tB = b.updatedAt?.toMillis() || 0;
+            return tB - tA; // desc
+        });
+        callback(items);
+    }, (error) => {
+        console.error("subscribeToMyManuals error:", error);
     });
 };
 
@@ -173,6 +236,7 @@ export const createManualItem = async (
         title: data.title,
         targetId: ref.id,
         categoryId: data.categoryId,
+        academyId: data.academyId,
         authorName: data.lastEditedByName || '관리자',
     });
 
@@ -191,20 +255,31 @@ export const updateManualItem = async (
 
     // 알림 생성 (수정 시)
     if (data.title) {
+        const item = await getManualItem(id);
         await createNotification({
             type: 'manual',
             action: 'updated',
             title: data.title,
             targetId: id,
-            categoryId: (data as any).categoryId, // 혹은 기존 데이타에서 가져와야할 수도 있지만 일단 이렇게
+            categoryId: data.categoryId || (item?.categoryId),
+            academyId: data.academyId || (item?.academyId || ''),
             authorName: data.lastEditedByName || '관리자',
         });
     }
 };
 
-/** 매뉴얼 삭제 */
+/** 매뉴얼 삭제 (관련 알림도 함께 삭제) */
 export const deleteManualItem = async (id: string): Promise<void> => {
-    await deleteDoc(doc(db, 'manualItems', id));
+    const batch = writeBatch(db);
+
+    // 1. 관련 알림 삭제
+    const notiSnap = await getDocs(query(collection(db, 'notifications'), where('targetId', '==', id)));
+    notiSnap.docs.forEach(d => batch.delete(d.ref));
+
+    // 2. 매뉴얼 원본 삭제
+    batch.delete(doc(db, 'manualItems', id));
+
+    await batch.commit();
 };
 
 /** 매뉴얼 스크랩 토글 */

@@ -1,9 +1,11 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAcademy } from '../contexts/AcademyContext';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { academyName } = useAcademy();
 
   const stats = [
     { label: '오늘의 출근', value: '12/14', icon: 'groups', color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -21,14 +23,22 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="pb-32 min-h-screen">
-      <header className="px-6 pt-10 pb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">Admin Console</h1>
-          <div className="size-10 rounded-full bg-slate-100 flex items-center justify-center">
-            <span className="material-symbols-outlined text-slate-600">admin_panel_settings</span>
+      <header className="px-6 pt-14 pb-6 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+              {academyName && academyName !== 'HAEMA' && (
+                <span className="text-[10px] font-black text-slate-400 tracking-wider font-display uppercase">{academyName}</span>
+              )}
+            </div>
+            <p className="text-sm font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mt-1.5 leading-none">Admin Console</p>
+          </div>
+          <div className="size-12 rounded-2xl bg-slate-900 flex items-center justify-center shadow-xl shadow-slate-900/10">
+            <span className="material-symbols-outlined text-white text-2xl">admin_panel_settings</span>
           </div>
         </div>
-        <p className="text-sm font-medium text-slate-500">학원 운영 현황을 한눈에 파악하세요.</p>
+        <p className="text-[12px] font-bold text-slate-400 leading-relaxed">학원 운영 현황을 실시간으로 관리하고 파악하세요.</p>
       </header>
 
       <main className="px-6 space-y-8">
@@ -50,7 +60,7 @@ const AdminDashboard: React.FC = () => {
           <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-1">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-4">
             {quickActions.map((action, i) => (
-              <button 
+              <button
                 key={i}
                 onClick={() => navigate(action.path)}
                 className="flex flex-col items-center gap-3 p-6 rounded-[2.5rem] bg-white border border-slate-100 shadow-sm active:scale-95 transition-all"
