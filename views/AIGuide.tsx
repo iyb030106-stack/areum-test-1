@@ -360,191 +360,186 @@ const AIGuide: React.FC<AIGuideProps> = ({ role, currentUser }) => {
   const isLandingView = messages.length === 0;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-96px)] overflow-hidden relative font-display bg-white dark:bg-slate-950">
+    <div className="absolute inset-0 flex flex-col overflow-hidden font-display bg-white dark:bg-slate-950 z-10">
 
       {/* ── 상단 고정 헤더 (항상 표시) ── */}
-      <header className="flex items-center justify-between px-6 pt-14 pb-4 shrink-0 z-10 border-b border-slate-100 dark:border-slate-800">
+      <header className="flex items-center justify-between px-6 pt-11 pb-3 shrink-0 z-10 border-b border-slate-100 dark:border-slate-800">
         {/* 학원명 타이틀 */}
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline gap-1.5">
           <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">HAEMA</span>
           {academyName && academyName !== 'HAEMA' && (
-            <span className="text-[10px] font-black text-slate-400 tracking-wider">{academyName}</span>
+            <span className="text-[13px] font-bold text-slate-400 dark:text-slate-500 tracking-tight">{academyName}</span>
           )}
         </div>
 
-        {/* 오른쪽: 초기화 버튼 */}
-        <button
-          onClick={handleReset}
-          className="size-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-90 border border-slate-100 dark:border-slate-700"
-          title="대화 초기화"
-        >
-          <span className="material-symbols-outlined text-[18px]">restart_alt</span>
-        </button>
+        {/* 오른쪽: 버튼 그룹 */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowGuide(true)}
+            className="size-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-primary transition-all active:scale-90 border border-slate-100 dark:border-slate-700"
+            title="사용 방법 가이드"
+          >
+            <span className="material-symbols-outlined text-[18px]">help_outline</span>
+          </button>
+          <button
+            onClick={handleReset}
+            className="size-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-90 border border-slate-100 dark:border-slate-700"
+            title="대화 초기화"
+          >
+            <span className="material-symbols-outlined text-[18px]">restart_alt</span>
+          </button>
+        </div>
       </header>
 
-      {/* ── 랜딩 뷰 (대화 없을 때) ── */}
-      {isLandingView && (
-        <div className="flex-1 flex items-center justify-center pb-12 px-6">
-
-          {/* 해마 왼쪽 + 말풍선 오른쪽 */}
-          <div className="flex items-start gap-3">
-
+      {/* ── 메인 컨텐츠 영역 ── */}
+      <div className="flex-1 overflow-y-auto no-scrollbar relative flex flex-col">
+        {/* 랜딩 뷰 (대화 없을 때) */}
+        {isLandingView && (
+          <div className="flex-1 flex flex-col items-center pt-12 pb-10 px-6 text-center animate-fade-in">
             {/* 해마 캐릭터 */}
             <img
               src="/haema_logo.png"
               alt="HAEMA"
-              className="size-32 object-contain haema-flip animate-float drop-shadow-sm shrink-0"
+              className="size-20 object-contain haema-flip animate-float drop-shadow-sm mb-8"
             />
 
-            {/* 말풍선 (해마 오른쪽, 머리 높이에 맞춤) */}
-            <div className="relative mt-3">
-              {/* 꼬리 바깥 삼각형 (테두리색) */}
-              <div
-                className="absolute"
-                style={{
-                  left: -11,
-                  top: 9,
-                  width: 0, height: 0,
-                  borderTop: '9px solid transparent',
-                  borderBottom: '9px solid transparent',
-                  borderRight: '11px solid #e2e8f0',
-                }}
-              />
-              {/* 꼬리 안쪽 삼각형 (배경색 — 테두리만 보이게) */}
-              <div
-                className="absolute"
-                style={{
-                  left: -8,
-                  top: 10,
-                  width: 0, height: 0,
-                  borderTop: '8px solid transparent',
-                  borderBottom: '8px solid transparent',
-                  borderRight: '10px solid white',
-                }}
-              />
-              {/* 말풍선 박스 */}
-              <div className="bg-white text-slate-400 text-[13px] font-medium px-4 py-2.5 rounded-2xl border border-slate-200 whitespace-nowrap">
-                {role === 'admin'
-                  ? '매뉴얼을 저에게 말해주세요 !'
-                  : '업무 방법이 궁금하면 저에게 물어보세요 !'}
-              </div>
+            <h2 className="text-lg font-black text-slate-900 dark:text-white mb-1">
+              안녕하세요 !
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 font-bold text-[13px] leading-relaxed mb-10">
+              {role === 'admin'
+                ? '매뉴얼을 관리하거나 공지사항을 등록해보세요.'
+                : '업무 방법이 궁금하면 저에게 물어보세요.'}
+            </p>
+
+            {/* 추천 질문 그리드 */}
+            <div className="grid grid-cols-2 gap-2.5 w-full max-w-[300px] animate-slide-up">
+              {(role === 'admin' ? [
+                { icon: 'edit_document', text: '매뉴얼 관리 방법' },
+                { icon: 'campaign', text: '공지사항 등록' },
+                { icon: 'category', text: '카테고리 생성' },
+                { icon: 'settings_suggest', text: '운영 설정 변경' },
+              ] : [
+                { icon: 'task_alt', text: '출결 처리 방법' },
+                { icon: 'campaign', text: '공지사항 확인' },
+                { icon: 'person_search', text: '상담 매뉴얼' },
+                { icon: 'more_horiz', text: '기타 업무' },
+              ]).map((q, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSend(q.text)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 transition-all active:scale-95 shadow-sm text-[10px] font-bold hover:border-slate-200 dark:hover:border-slate-700"
+                >
+                  <span className="material-symbols-outlined text-[15px] opacity-70">{q.icon}</span>
+                  <span className="truncate">{q.text}</span>
+                </button>
+              ))}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── 채팅 뷰 (대화 시작 후) ── */}
-      {!isLandingView && (
-        <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-6 no-scrollbar relative z-10">
-          {messages.map((msg, idx) => {
-            const jsonContent = msg.role === 'model' ? extractJson(msg.content) : null;
-            return (
-              <div key={idx} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                {msg.role === 'model' && (
-                  <div className={`size-8 rounded-xl flex items-center justify-center shrink-0 border ${role === 'admin' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
-                    <img src="/haema_logo.png" alt="AI" className="size-5 object-contain haema-flip" />
-                  </div>
-                )}
-                <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end max-w-[82%]' : 'items-start max-w-[82%]'}`}>
-                  <div className={`group relative rounded-[1.5rem] px-5 py-3.5 text-[14px] leading-relaxed tracking-normal whitespace-pre-wrap ${msg.role === 'user'
-                    ? 'rounded-tr-sm bg-slate-900 text-white font-medium dark:bg-slate-100 dark:text-slate-900'
-                    : 'rounded-tl-sm bg-slate-50 dark:bg-slate-800/70 text-slate-800 dark:text-white border border-slate-100 dark:border-slate-700 font-medium'
-                    }`}>
-                    {renderMessageContent(msg.content)}
+        {/* 채팅 뷰 (대화 시작 후) */}
+        {!isLandingView && (
+          <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-6 relative z-10 overscroll-contain">
+            {messages.map((msg, idx) => {
+              const jsonContent = msg.role === 'model' ? extractJson(msg.content) : null;
+              return (
+                <div key={idx} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                  {msg.role === 'model' && (
+                    <div className={`size-8 rounded-xl flex items-center justify-center shrink-0 border ${role === 'admin' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+                      <img src="/haema_logo.png" alt="AI" className="size-5 object-contain haema-flip" />
+                    </div>
+                  )}
+                  <div className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end max-w-[82%]' : 'items-start max-w-[82%]'}`}>
+                    <div className={`group relative rounded-[1.5rem] px-5 py-3.5 text-[14px] leading-relaxed tracking-normal whitespace-pre-wrap ${msg.role === 'user'
+                      ? 'rounded-tr-sm bg-slate-900 text-white font-medium dark:bg-slate-100 dark:text-slate-900'
+                      : 'rounded-tl-sm bg-slate-50 dark:bg-slate-800/70 text-slate-800 dark:text-white border border-slate-100 dark:border-slate-700 font-medium'
+                      }`}>
+                      {renderMessageContent(msg.content)}
 
-                    {/* 복사 버튼 */}
-                    <button
-                      onClick={() => handleCopyText(msg.content, idx)}
-                      className={`absolute bottom-2 right-2 p-1.5 rounded-lg bg-white/50 backdrop-blur-sm shadow-sm transition-all opacity-0 group-hover:opacity-100 active:scale-90 ${copiedId === idx ? 'text-emerald-500 opacity-100' : 'text-slate-400'}`}
-                    >
-                      <span className="material-symbols-outlined text-[16px]">
-                        {copiedId === idx ? 'check' : 'content_copy'}
-                      </span>
-                    </button>
+                      {/* 복사 버튼 */}
+                      <button
+                        onClick={() => handleCopyText(msg.content, idx)}
+                        className={`absolute bottom-2 right-2 p-1.5 rounded-lg bg-white/50 backdrop-blur-sm shadow-sm transition-all opacity-0 group-hover:opacity-100 active:scale-90 ${copiedId === idx ? 'text-emerald-500 opacity-100' : 'text-slate-400'}`}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">
+                          {copiedId === idx ? 'check' : 'content_copy'}
+                        </span>
+                      </button>
 
-                    {jsonContent && (() => {
-                      let parsedType = 'UNKNOWN';
-                      try { parsedType = JSON.parse(jsonContent).requestType || 'UNKNOWN'; } catch { }
-                      const isCreate = parsedType === 'STRUCTURE_MANUAL';
-                      const isUpdate = parsedType === 'UPDATE_MANUAL';
-                      const isDelete = parsedType === 'DELETE_MANUAL';
-                      const isDeleteCat = parsedType === 'DELETE_CATEGORY';
-                      const isAnnouncement = parsedType === 'CREATE_ANNOUNCEMENT';
-                      const labelText = isAnnouncement ? '공지사항 등록 준비됨' : isCreate ? '매뉴얼 생성 준비됨' : isUpdate ? '매뉴얼 수정 준비됨' : isDelete ? '매뉴얼 삭제 준비됨' : isDeleteCat ? '카테고리 전체 삭제 준비됨' : '작업 준비됨';
-                      const btnColor = (isDelete || isDeleteCat) ? 'bg-red-500 hover:bg-red-600' : isUpdate ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600';
-                      const iconColor = (isDelete || isDeleteCat) ? 'text-red-400' : isUpdate ? 'text-amber-400' : 'text-emerald-400';
-                      const btnText = isAnnouncement ? '즉시 등록하기' : isCreate ? '즉시 생성하기' : isUpdate ? '즉시 수정하기' : (isDelete || isDeleteCat) ? '즉시 삭제하기' : '즉시 적용하기';
-                      const icon = isDelete ? 'delete' : isUpdate ? 'edit' : isAnnouncement ? 'campaign' : 'auto_awesome';
-                      return (
-                        <div className="mt-2 px-3 py-2 rounded-xl bg-slate-900 text-white space-y-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`material-symbols-outlined ${iconColor} text-xs`}>
-                              {icon}
-                            </span>
-                            <span className={`text-[9px] font-black ${iconColor} uppercase tracking-widest`}>{labelText}</span>
-                          </div>
-
-                          {/* 공지사항: 중요 토글 */}
-                          {isAnnouncement && (
-                            <div className="flex items-center justify-between py-1 border-t border-slate-700">
-                              <span className="text-[10px] font-bold text-slate-400">중요 공지로 등록</span>
-                              <button
-                                onClick={() => setImportantOverrides(prev => ({ ...prev, [idx]: !(prev[idx] ?? false) }))}
-                                className={`relative w-9 h-5 rounded-full transition-all shrink-0 ${(importantOverrides[idx] ?? false) ? 'bg-red-500' : 'bg-slate-700'
-                                  }`}
-                              >
-                                <span className={`absolute top-0.5 size-4 rounded-full bg-white shadow transition-all ${(importantOverrides[idx] ?? false) ? 'left-[18px]' : 'left-0.5'
-                                  }`} />
-                              </button>
+                      {jsonContent && (() => {
+                        let parsedType = 'UNKNOWN';
+                        try { parsedType = JSON.parse(jsonContent).requestType || 'UNKNOWN'; } catch { }
+                        const isCreate = parsedType === 'STRUCTURE_MANUAL';
+                        const isUpdate = parsedType === 'UPDATE_MANUAL';
+                        const isDelete = parsedType === 'DELETE_MANUAL';
+                        const isDeleteCat = parsedType === 'DELETE_CATEGORY';
+                        const isAnnouncement = parsedType === 'CREATE_ANNOUNCEMENT';
+                        const labelText = isAnnouncement ? '공지사항 등록 준비됨' : isCreate ? '매뉴얼 생성 준비됨' : isUpdate ? '매뉴얼 수정 준비됨' : isDelete ? '매뉴얼 삭제 준비됨' : isDeleteCat ? '카테고리 전체 삭제 준비됨' : '작업 준비됨';
+                        const btnColor = (isDelete || isDeleteCat) ? 'bg-red-500 hover:bg-red-600' : isUpdate ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600';
+                        const iconColor = (isDelete || isDeleteCat) ? 'text-red-400' : isUpdate ? 'text-amber-400' : 'text-emerald-400';
+                        const btnText = isAnnouncement ? '즉시 등록하기' : isCreate ? '즉시 생성하기' : isUpdate ? '즉시 수정하기' : (isDelete || isDeleteCat) ? '즉시 삭제하기' : '즉시 적용하기';
+                        const icon = isDelete ? 'delete' : isUpdate ? 'edit' : isAnnouncement ? 'campaign' : 'auto_awesome';
+                        return (
+                          <div className="mt-2 px-3 py-2 rounded-xl bg-slate-900 text-white space-y-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`material-symbols-outlined ${iconColor} text-xs`}>
+                                {icon}
+                              </span>
+                              <span className={`text-[9px] font-black ${iconColor} uppercase tracking-widest`}>{labelText}</span>
                             </div>
-                          )}
 
-                          <button
-                            onClick={() => handleApplyStructure(jsonContent, isAnnouncement ? (importantOverrides[idx] ?? false) : undefined)}
-                            className={`w-full py-2.5 rounded-xl text-[11px] font-black text-white shadow-lg active:scale-95 transition-all ${btnColor}`}
-                            disabled={isApplying}
-                          >
-                            {isApplying ? '처리 중...' : btnText}
-                          </button>
-                        </div>
-                      );
-                    })()}
+                            {/* 공지사항: 중요 토글 */}
+                            {isAnnouncement && (
+                              <div className="flex items-center justify-between py-1 border-t border-slate-700">
+                                <span className="text-[10px] font-bold text-slate-400">중요 공지로 등록</span>
+                                <button
+                                  onClick={() => setImportantOverrides(prev => ({ ...prev, [idx]: !(prev[idx] ?? false) }))}
+                                  className={`relative w-9 h-5 rounded-full transition-all shrink-0 ${(importantOverrides[idx] ?? false) ? 'bg-red-500' : 'bg-slate-700'
+                                    }`}
+                                >
+                                  <span className={`absolute top-0.5 size-4 rounded-full bg-white shadow transition-all ${(importantOverrides[idx] ?? false) ? 'left-[18px]' : 'left-0.5'
+                                    }`} />
+                                </button>
+                              </div>
+                            )}
+
+                            <button
+                              onClick={() => handleApplyStructure(jsonContent, isAnnouncement ? (importantOverrides[idx] ?? false) : undefined)}
+                              className={`w-full py-2.5 rounded-xl text-[11px] font-black text-white shadow-lg active:scale-95 transition-all ${btnColor}`}
+                              disabled={isApplying}
+                            >
+                              {isApplying ? '처리 중...' : btnText}
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <span className="text-[10px] font-black text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 px-1">{msg.timestamp}</span>
+                </div>
+              );
+            })}
+            {isLoading && (
+              <div className="flex gap-3 items-center pl-11">
+                <div className="flex gap-1.5">
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></div>
+                  <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-150"></div>
                 </div>
               </div>
-            );
-          })}
-          {isLoading && (
-            <div className="flex gap-3 items-center pl-11">
-              <div className="flex gap-1.5">
-                <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75"></div>
-                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce delay-150"></div>
-              </div>
-            </div>
-          )}
-        </main>
-      )
-      }
+            )}
+          </main>
+        )}
+      </div>
 
       {/* ── 하단 입력창 (Genspark 스타일) ── */}
-      <div className={`px-5 pb-6 pt-3 shrink-0 z-20 ${isLandingView ? '' : 'border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950'}`}>
+      <div className={`px-5 pb-[86px] pt-3 shrink-0 z-20 ${isLandingView ? '' : 'border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950'}`}>
 
-        {/* 사용 방법 CTA */}
-        <button
-          onClick={() => setShowGuide(true)}
-          className="w-full flex items-center justify-center gap-2 mb-2.5 py-2 px-4 rounded-full bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all active:scale-98"
-        >
-          <span className="material-symbols-outlined text-[14px] text-slate-400">info</span>
-          이 AI를 어떻게 사용하나요?
-          <span className="material-symbols-outlined text-[14px] text-slate-300">chevron_right</span>
-        </button>
-
-        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-[1.75rem] border border-slate-200 dark:border-slate-700 px-4 py-3 shadow-sm">
+        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 shadow-sm">
           {/* 텍스트 입력 */}
           <input
-            className="flex-1 bg-transparent border-none focus:ring-0 text-[14px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
+            className="flex-1 bg-transparent border-none focus:ring-0 text-[12px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
             placeholder={role === 'admin' ? '매뉴얼을 HAEMA에게 말해보세요.' : '업무 방법이 궁금하면 HAEMA에게 물어보세요.'}
             type="text"
             value={input}
@@ -556,32 +551,32 @@ const AIGuide: React.FC<AIGuideProps> = ({ role, currentUser }) => {
           {isLoading ? (
             <button
               onClick={stopMessage}
-              className="size-9 rounded-full bg-red-500 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shrink-0"
+              className="size-7 rounded-full bg-red-500 flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shrink-0"
               title="중단하기"
             >
-              <span className="material-symbols-outlined text-[18px]">stop</span>
+              <span className="material-symbols-outlined text-[16px]">stop</span>
             </button>
           ) : (
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               {/* 마이크 버튼 */}
               <button
                 onClick={handleVoice}
                 title={isListening ? '음성 인식 중단' : '음성으로 입력'}
-                className={`size-9 rounded-full flex items-center justify-center transition-all active:scale-90 shrink-0 ${isListening
+                className={`size-7 rounded-full flex items-center justify-center transition-all active:scale-90 shrink-0 ${isListening
                   ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 animate-pulse'
                   : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200'
                   }`}
               >
-                <span className="material-symbols-outlined text-[18px]">mic</span>
+                <span className="material-symbols-outlined text-[16px]">mic</span>
               </button>
 
               {/* 전송 버튼 */}
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim()}
-                className="size-9 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center text-white dark:text-slate-900 shadow-lg active:scale-90 transition-all disabled:opacity-30 shrink-0"
+                className="size-7 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center text-white dark:text-slate-900 shadow-lg active:scale-90 transition-all disabled:opacity-30 shrink-0"
               >
-                <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+                <span className="material-symbols-outlined text-[16px]">arrow_upward</span>
               </button>
             </div>
           )}

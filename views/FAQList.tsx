@@ -44,10 +44,10 @@ const FAQList: React.FC<FAQListProps> = ({ role }) => {
             <header className="sticky top-0 z-20 bg-white/55 dark:bg-slate-900/55 backdrop-blur-xl border-b border-white/40 shadow-sm">
                 <div className="px-6 pt-14 pb-2 flex items-center justify-between">
                     <div>
-                        <div className="flex items-baseline gap-2">
-                            <h1 className="text-primary dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
+                        <div className="flex items-baseline gap-1.5">
+                            <h1 className="text-slate-900 dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
                             {academyName && academyName !== 'HAEMA' && (
-                                <span className="text-[10px] font-black text-slate-400 tracking-wider">{academyName}</span>
+                                <span className="text-[13px] font-bold text-slate-400 dark:text-slate-500 tracking-tight">{academyName}</span>
                             )}
                         </div>
                         <p className="text-sm font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mt-1.5">Q&A</p>

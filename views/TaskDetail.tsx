@@ -129,41 +129,32 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ role, currentUser }) => {
         </h1>
         <p className="text-sm text-slate-500 mt-1 font-medium">{item.description}</p>
         <div className="flex items-center gap-4 mt-2">
-          {item.timeEstimate && (
-            <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm">
-              <span className="material-symbols-outlined text-sm">schedule</span>
-              <span>예상 시간: {item.timeEstimate}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm">
-            <span className="material-symbols-outlined text-sm">bolt</span>
-            <span>
-              난이도:{' '}
-              {item.level === 'Intermediate' ? '중급' : item.level === 'Beginner' ? '초급' : '고급'}
-            </span>
+          <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[12px] font-bold">
+            <span className="material-symbols-outlined text-[14px]">history</span>
+            <span>최종 업데이트: {item.updatedAt ? item.updatedAt.toDate().toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }) : '정보 없음'}</span>
           </div>
         </div>
       </div>
 
       {/* 단계별 가이드 */}
-      <div className="px-6 pb-8 pt-4 relative z-10">
-        <h3 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em] mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary">checklist</span>
+      <div className="px-6 pb-6 pt-4 relative z-10">
+        <h3 className="text-slate-900 dark:text-white text-[18px] font-bold leading-tight tracking-tight mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-[22px]">checklist</span>
           단계별 가이드
         </h3>
         {item.steps && item.steps.length > 0 ? (
-          <ul className="space-y-4">
+          <ul className="space-y-2">
             {item.steps.map((text, i) => (
               <li
                 key={i}
-                className="flex items-start gap-4 p-4 rounded-xl bg-white/55 backdrop-blur-md dark:bg-slate-800/55 border border-white/40 dark:border-slate-800"
+                className="flex items-start gap-3 p-2.5 rounded-xl bg-white/55 backdrop-blur-md dark:bg-slate-800/55 border border-white/40 dark:border-slate-800 shadow-sm"
               >
                 <div className="flex-shrink-0 mt-0.5">
-                  <span className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                  <span className="flex items-center justify-center size-5 rounded-full bg-primary/10 text-primary text-[10px] font-black">
                     {i + 1}
                   </span>
                 </div>
-                <p className="text-slate-700 dark:text-slate-300 text-base leading-relaxed">{text}</p>
+                <p className="text-slate-700 dark:text-slate-300 text-[13px] font-medium leading-relaxed">{text}</p>
               </li>
             ))}
           </ul>
@@ -173,19 +164,12 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ role, currentUser }) => {
       </div>
 
       {/* 하단 버튼 */}
-      <div className="px-6 pb-32 pt-2 flex flex-col gap-3 relative z-10">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-full bg-primary text-white py-4 px-6 rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg active:scale-95"
-        >
-          완료
-          <span className="material-symbols-outlined">check_circle</span>
-        </button>
+      <div className="px-6 pb-20 pt-1 flex flex-col gap-3 relative z-10">
         <button
           onClick={handleAskAI}
-          className="w-full bg-white/55 backdrop-blur-md text-primary py-4 px-6 rounded-xl font-bold text-lg flex items-center justify-center gap-2 border-2 border-primary/30 hover:bg-primary/5 active:scale-95"
+          className="w-full bg-white/55 backdrop-blur-md text-slate-800 dark:text-white py-3 px-5 rounded-xl font-black text-[13.5px] flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95 transition-all"
         >
-          <span className="material-symbols-outlined !text-2xl">chat_bubble</span>
+          <span className="material-symbols-outlined text-slate-400 text-[18px]">chat_bubble</span>
           AI에게 도움 요청
         </button>
       </div>

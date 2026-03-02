@@ -40,32 +40,32 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
         {children}
       </div>
 
-      <nav className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100/50 dark:border-slate-800/50 px-4 pb-8 pt-3 z-50 transition-all duration-300 ${location.pathname.startsWith('/chat/') ? 'translate-y-[calc(100%+3rem)] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
+      <nav className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100/50 dark:border-slate-800/50 px-4 pb-3 pt-1.5 z-50 transition-all duration-300 ${location.pathname.startsWith('/chat/') ? 'translate-y-[calc(100%+3rem)] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
         <div className="flex items-end justify-between">
-          <NavLink to="/" end className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
-            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/' ? 'fill-1' : ''}`}>home</span>
-            <span className="text-[10px] font-black tracking-tighter">홈</span>
+          <NavLink to="/" end className={({ isActive }) => `flex-1 flex flex-col items-center gap-0.5 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
+            <span className={`material-symbols-outlined text-[20px] ${location.pathname === '/' ? 'fill-1' : ''}`}>home</span>
+            <span className="text-[8.5px] font-black tracking-tighter">홈</span>
           </NavLink>
 
-          <NavLink to="/home" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
-            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/home' ? 'fill-1' : ''}`}>grid_view</span>
-            <span className="text-[10px] font-black tracking-tighter">매뉴얼</span>
+          <NavLink to="/home" className={({ isActive }) => `flex-1 flex flex-col items-center gap-0.5 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
+            <span className={`material-symbols-outlined text-[20px] ${location.pathname === '/home' ? 'fill-1' : ''}`}>menu_book</span>
+            <span className="text-[8.5px] font-black tracking-tighter">매뉴얼</span>
           </NavLink>
 
-          <NavLink to="/announcements" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
-            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/announcements' ? 'fill-1' : ''}`}>campaign</span>
-            <span className="text-[10px] font-black tracking-tighter">공지 사항</span>
+          <NavLink to="/announcements" className={({ isActive }) => `flex-1 flex flex-col items-center gap-0.5 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
+            <span className={`material-symbols-outlined text-[20px] ${location.pathname === '/announcements' ? 'fill-1' : ''}`}>campaign</span>
+            <span className="text-[8.5px] font-black tracking-tighter">공지 사항</span>
           </NavLink>
 
-          <NavLink to="/faq" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
-            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/faq' ? 'fill-1' : ''}`}>quiz</span>
-            <span className="text-[10px] font-black tracking-tighter">Q&A</span>
+          <NavLink to="/faq" className={({ isActive }) => `flex-1 flex flex-col items-center gap-0.5 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
+            <span className={`material-symbols-outlined text-[20px] ${location.pathname === '/faq' ? 'fill-1' : ''}`}>question_answer</span>
+            <span className="text-[8.5px] font-black tracking-tighter">Q&A</span>
           </NavLink>
 
 
-          <NavLink to="/mypage" className={({ isActive }) => `flex-1 flex flex-col items-center gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
-            <span className={`material-symbols-outlined text-[26px] ${location.pathname === '/mypage' ? 'fill-1' : ''}`}>person</span>
-            <span className="text-[10px] font-black tracking-tighter">내 정보</span>
+          <NavLink to="/mypage" className={({ isActive }) => `flex-1 flex flex-col items-center gap-0.5 transition-all ${isActive ? 'text-primary' : 'text-slate-400 opacity-50'}`}>
+            <span className={`material-symbols-outlined text-[20px] ${location.pathname === '/mypage' ? 'fill-1' : ''}`}>person</span>
+            <span className="text-[8.5px] font-black tracking-tighter">내 정보</span>
           </NavLink>
         </div>
       </nav>
