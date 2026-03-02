@@ -126,9 +126,14 @@ export const subscribeToAnnouncements = (
     return onSnapshot(q, (snapshot) => {
         const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Announcement[];
         items.sort((a, b) => {
+            // 1순위: 중요 공지 여부
+            if (a.isImportant && !b.isImportant) return -1;
+            if (!a.isImportant && b.isImportant) return 1;
+
+            // 2순위: 작성 시간 (최신순)
             const tA = a.createdAt?.toMillis() || 0;
             const tB = b.createdAt?.toMillis() || 0;
-            return tB - tA; // desc
+            return tB - tA;
         });
         callback(items);
     }, (error) => {

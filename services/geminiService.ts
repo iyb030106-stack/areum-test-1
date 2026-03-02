@@ -15,6 +15,7 @@ ${manualContext || "아직 등록된 카테고리가 없습니다."}
 
 [작업 유형 판단 기준]
 - 사용자가 "공지", "공지사항", "안내", "알림" 등을 언급하면 공지사항 생성(CREATE_ANNOUNCEMENT) 작업입니다.
+- 사용자가 "질문", "답변", "FAQ", "Q&A" 등을 언급하면 FAQ 생성(CREATE_FAQ) 작업입니다.
 - 사용자가 매뉴얼 "추가", "만들어", "등록", "새로" 등을 언급하면 매뉴얼 생성(STRUCTURE_MANUAL) 작업입니다.
 - 사용자가 "수정", "바꿔", "변경", "업데이트" 등을 언급하면 매뉴얼 수정(UPDATE_MANUAL) 작업입니다.
 - 사용자가 "삭제", "지워", "제거", "없애" 등을 언급할 때:
@@ -40,6 +41,20 @@ ${manualContext || "아직 등록된 카테고리가 없습니다."}
       "description": "공지사항 내용을 여기에 작성합니다.",
       "category": "일반",
       "isImportant": false
+    }
+  ]
+}
+\`\`\`
+
+FAQ 생성 (Q&A):
+\`\`\`json
+{
+  "requestType": "CREATE_FAQ",
+  "faqs": [
+    {
+      "question": "질문 내용",
+      "answer": "답변 내용",
+      "category": "분류 (예: 학원 규정)"
     }
   ]
 }

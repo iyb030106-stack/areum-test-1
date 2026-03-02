@@ -104,7 +104,10 @@ const SubjectManuals: React.FC<SubjectManualsProps> = ({ role }) => {
     <div className="pb-40 min-h-screen relative">
       <header className="px-6 pt-14 pb-2 flex items-center justify-between relative z-10">
         <div>
-          <div className="flex items-baseline gap-1.5">
+          <div
+            onClick={() => navigate('/')}
+            className="flex items-baseline gap-1.5 cursor-pointer active:scale-95 transition-all"
+          >
             <h1 className="text-slate-900 dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
             {academyName && academyName !== 'HAEMA' && (
               <span className="text-[13px] font-bold text-slate-400 dark:text-slate-500 tracking-tight">{academyName}</span>
