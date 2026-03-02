@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../types';
-import { FirestoreUser, updateUserProfile, deleteUserAccount, subscribeToAllUsers } from '../services/authService';
+import { FirestoreUser, updateUserProfile, deleteUserAccount, subscribeToAllUsers, getAvatarColors } from '../services/authService';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Announcement, formatTimeAgo } from '../services/announcementService';
@@ -129,13 +129,17 @@ const StoreInfo: React.FC<StoreInfoProps> = ({ role, currentUser, onLogout }) =>
   const handleSaveProfile = async () => {
     if (!currentUser?.uid) return;
     try {
+      const colors = getAvatarColors(editName);
       await updateUserProfile(currentUser.uid, {
         name: editName,
         position: editPosition,
         avatarUrl: editAvatarUrl,
+        initial: editName.charAt(0).toUpperCase(),
+        avatarColor: colors.bg,
+        avatarTextColor: colors.text
       });
       setIsEditingProfile(false);
-      alert('프로필이 성공적으로 수정되었습니다.\n새로고침을 하거나 재접속 시 전체 앱에 즉시 적용됩니다.');
+      alert('프로필이 성공적으로 수정되었습니다.\n재접속 시 전체 앱에 즉시 적용됩니다.');
     } catch (error) {
       console.error('Error updating profile:', error);
       alert('프로필 수정 중 오류가 발생했습니다.');

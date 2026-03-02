@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HaemaIcon } from '../components/Layout';
 import { loginUser, registerUser, findAcademyByInviteCode, generateUniqueInviteCode, deleteUserAccount, logoutUser, FirestoreUser } from '../services/authService';
 import { UserRole } from '../types';
@@ -50,6 +51,7 @@ const Input: React.FC<{
 );
 
 const Login: React.FC<LoginProps> = ({ onLogin, initialPendingUser }) => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [view, setView] = useState<ViewState>(() => {
@@ -292,7 +294,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, initialPendingUser }) => {
       <div className="absolute bottom-[-10%] right-[-10%] w-[60%] aspect-square bg-slate-300/10 rounded-full blur-[100px] animate-pulse delay-1000" />
 
       <div className="w-full max-w-md z-10">
-        <div className="flex flex-col items-center mb-10 animate-fade-in">
+        <div
+          onClick={() => navigate('/')}
+          className="flex flex-col items-center mb-10 animate-fade-in cursor-pointer active:scale-95 transition-all"
+        >
           <div className="size-20 bg-white/85 backdrop-blur-md rounded-[2rem] flex items-center justify-center shadow-2xl shadow-blue-200/20 mb-6 border border-white">
             <HaemaIcon className="size-12 animate-bounce-slow" />
           </div>

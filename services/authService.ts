@@ -5,7 +5,7 @@ import {
     deleteUser,
     User,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, getDocs, deleteDoc, collection, onSnapshot, orderBy, query, where, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, collection, onSnapshot, orderBy, query, where, Timestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { UserRole } from '../types';
 
@@ -35,7 +35,8 @@ const AVATAR_PALETTE = [
     { bg: 'bg-cyan-100', text: 'text-cyan-600' },
 ];
 
-const getAvatarColors = (name: string) => {
+/** 이름 기반 아바타 색상 세트 가져오기 */
+export const getAvatarColors = (name: string) => {
     const index = name.charCodeAt(0) % AVATAR_PALETTE.length;
     return AVATAR_PALETTE[index];
 };
@@ -96,9 +97,7 @@ export const updateUserProfile = async (
     uid: string,
     data: Partial<Omit<FirestoreUser, 'uid' | 'createdAt' | 'email' | 'role'>>
 ): Promise<void> => {
-    import('firebase/firestore').then(({ updateDoc }) => {
-        updateDoc(doc(db, 'users', uid), data);
-    });
+    await updateDoc(doc(db, 'users', uid), data);
 };
 
 /** 로그아웃 */

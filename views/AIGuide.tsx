@@ -13,7 +13,7 @@ import {
   deleteManualCategory,
 } from '../services/manualService';
 import { createAnnouncement, subscribeToAnnouncements, Announcement } from '../services/announcementService';
-import { subscribeToFAQs, FAQ } from '../services/faqService';
+import { subscribeToFAQs, createFAQ, FAQ } from '../services/faqService';
 import { auth } from '../services/firebase';
 import { useChat } from '../contexts/ChatContext';
 
@@ -278,6 +278,25 @@ const AIGuide: React.FC<AIGuideProps> = ({ role, currentUser }) => {
         }
         alert(`✅ ${data.announcements.length}개의 공지사항이 등록되었습니다!`);
 
+        // ── FAQ 생성 ──────────────────────────────────
+      } else if (data.requestType === 'CREATE_FAQ') {
+        if (!data.faqs || !Array.isArray(data.faqs)) {
+          alert('FAQ 데이터 구조를 찾을 수 없습니다.');
+          return;
+        }
+        const user = auth.currentUser;
+        for (const faq of data.faqs) {
+          await createFAQ({
+            question: faq.question,
+            answer: faq.answer,
+            category: faq.category || '일반',
+            academyId,
+            authorId: user?.uid || 'AI_ASSISTANT',
+            authorName: currentUser?.name || user?.displayName || 'Haema AI',
+          });
+        }
+        alert(`✅ ${data.faqs.length}개의 Q&A가 등록되었습니다!`);
+
       } else {
         alert('올바른 데이터 형식이 아닙니다.');
       }
@@ -365,7 +384,10 @@ const AIGuide: React.FC<AIGuideProps> = ({ role, currentUser }) => {
       {/* ── 상단 고정 헤더 (항상 표시) ── */}
       <header className="flex items-center justify-between px-6 pt-11 pb-3 shrink-0 z-10 border-b border-slate-100 dark:border-slate-800">
         {/* 학원명 타이틀 */}
-        <div className="flex items-baseline gap-1.5">
+        <div
+          onClick={() => navigate('/')}
+          className="flex items-baseline gap-1.5 cursor-pointer active:scale-95 transition-all"
+        >
           <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">HAEMA</span>
           {academyName && academyName !== 'HAEMA' && (
             <span className="text-[13px] font-bold text-slate-400 dark:text-slate-500 tracking-tight">{academyName}</span>
@@ -475,11 +497,12 @@ const AIGuide: React.FC<AIGuideProps> = ({ role, currentUser }) => {
                         const isDelete = parsedType === 'DELETE_MANUAL';
                         const isDeleteCat = parsedType === 'DELETE_CATEGORY';
                         const isAnnouncement = parsedType === 'CREATE_ANNOUNCEMENT';
-                        const labelText = isAnnouncement ? '공지사항 등록 준비됨' : isCreate ? '매뉴얼 생성 준비됨' : isUpdate ? '매뉴얼 수정 준비됨' : isDelete ? '매뉴얼 삭제 준비됨' : isDeleteCat ? '카테고리 전체 삭제 준비됨' : '작업 준비됨';
+                        const isFAQ = parsedType === 'CREATE_FAQ';
+                        const labelText = isAnnouncement ? '공지사항 등록 준비됨' : isFAQ ? 'Q&A 등록 준비됨' : isCreate ? '매뉴얼 생성 준비됨' : isUpdate ? '매뉴얼 수정 준비됨' : isDelete ? '매뉴얼 삭제 준비됨' : isDeleteCat ? '카테고리 전체 삭제 준비됨' : '작업 준비됨';
                         const btnColor = (isDelete || isDeleteCat) ? 'bg-red-500 hover:bg-red-600' : isUpdate ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600';
                         const iconColor = (isDelete || isDeleteCat) ? 'text-red-400' : isUpdate ? 'text-amber-400' : 'text-emerald-400';
-                        const btnText = isAnnouncement ? '즉시 등록하기' : isCreate ? '즉시 생성하기' : isUpdate ? '즉시 수정하기' : (isDelete || isDeleteCat) ? '즉시 삭제하기' : '즉시 적용하기';
-                        const icon = isDelete ? 'delete' : isUpdate ? 'edit' : isAnnouncement ? 'campaign' : 'auto_awesome';
+                        const btnText = (isAnnouncement || isFAQ) ? '즉시 등록하기' : isCreate ? '즉시 생성하기' : isUpdate ? '즉시 수정하기' : (isDelete || isDeleteCat) ? '즉시 삭제하기' : '즉시 적용하기';
+                        const icon = isDelete ? 'delete' : isUpdate ? 'edit' : (isAnnouncement || isFAQ) ? 'campaign' : 'auto_awesome';
                         return (
                           <div className="mt-2 px-3 py-2 rounded-xl bg-slate-900 text-white space-y-1.5">
                             <div className="flex items-center gap-1.5">
@@ -623,6 +646,7 @@ const AIGuide: React.FC<AIGuideProps> = ({ role, currentUser }) => {
                   <>
                     {[
                       { icon: 'add_circle', color: 'text-emerald-500 bg-emerald-50', title: '매뉴얼 추가', desc: '새로운 매뉴얼 항목을 만들어요', examples: ['"수학 기초반 수업 진행 방법 추가해줘"', '"학생 상담 절차 새로 만들어줘"'] },
+                      { icon: 'help_center', color: 'text-blue-500 bg-blue-50', title: 'Q&A 등록', desc: '자주 묻는 질문(FAQ)을 등록해요', examples: ['"주차 관련 공지사항을 Q&A로도 올려줘"', '"신상 상담 시 주의사항을 FAQ에 추가해"'] },
                       { icon: 'edit', color: 'text-amber-500 bg-amber-50', title: '매뉴얼 수정', desc: '기존 항목의 내용을 바꿔요', examples: ['"출결 관리 매뉴얼 내용 수정해줘"', '"비품 신청 절차 단계 바꿔줘"'] },
                       { icon: 'delete', color: 'text-red-500 bg-red-50', title: '매뉴얼 / 카테고리 삭제', desc: '항목 또는 카테고리 전체를 삭제해요', examples: ['"운영 관리 카테고리 삭제해줘"', '"출결 관련 항목 지워줘"'] },
                     ].map(item => (

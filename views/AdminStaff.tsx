@@ -23,7 +23,10 @@ const AdminStaff: React.FC = () => {
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
             <div>
-              <div className="flex items-baseline gap-1.5">
+              <div
+                onClick={() => navigate('/')}
+                className="flex items-baseline gap-1.5 cursor-pointer active:scale-95 transition-all"
+              >
                 <h1 className="text-slate-900 dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
                 {academyName && academyName !== 'HAEMA' && (
                   <span className="text-[13px] font-bold text-slate-400 dark:text-slate-500 tracking-tight font-display uppercase">{academyName}</span>

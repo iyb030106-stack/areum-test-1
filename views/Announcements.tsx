@@ -71,6 +71,15 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
           u.description.toLowerCase().includes(q),
       );
     }
+    // 중요 공지(isImportant) 순 -> 최신순 정렬
+    list.sort((a, b) => {
+      if (a.isImportant && !b.isImportant) return -1;
+      if (!a.isImportant && b.isImportant) return 1;
+      const tA = (a.createdAt as any)?.toMillis?.() || 0;
+      const tB = (b.createdAt as any)?.toMillis?.() || 0;
+      return tB - tA;
+    });
+
     return list;
   }, [announcements, activeFilter, searchQuery]);
 
@@ -110,7 +119,10 @@ const Announcements: React.FC<AnnouncementsProps> = ({ role }) => {
       <header className="sticky top-0 z-20 bg-white/55 dark:bg-slate-900/55 backdrop-blur-xl border-b border-white/40 dark:border-slate-800 shadow-sm">
         <div className="px-6 pt-14 pb-2 flex items-center justify-between">
           <div>
-            <div className="flex items-baseline gap-1.5">
+            <div
+              onClick={() => navigate('/')}
+              className="flex items-baseline gap-1.5 cursor-pointer active:scale-95 transition-all"
+            >
               <h1 className="text-slate-900 dark:text-white text-2xl font-black tracking-tighter leading-none">HAEMA</h1>
               {academyName && academyName !== 'HAEMA' && (
                 <span className="text-[13px] font-bold text-slate-400 dark:text-slate-500 tracking-tight">{academyName}</span>
