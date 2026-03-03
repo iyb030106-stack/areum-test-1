@@ -49,8 +49,18 @@ FAQ 생성:
 
 매뉴얼 생성:
 \`\`\`json
-{ "requestType": "STRUCTURE_MANUAL", "groups": [{ "category": { "name": "명칭", "type": "admin/subject", "icon": "아이콘" }, "items": [{ "title": "제목", "description": "설명", "steps": ["1", "2"], "icon": "아이콘" }] }] }
+{
+  "requestType": "STRUCTURE_MANUAL",
+  "groups": [{ 
+    "category": { "name": "명칭", "type": "admin/subject", "icon": "settings(소문자로 작성)" }, 
+    "items": [{ "title": "제목", "description": "설명", "steps": ["1", "2"], "icon": "fact_check(반드시 소문자_언더바 형식)" }] 
+  }]
+}
 \`\`\`
+
+[아이콘 가이드]
+- 반드시 Material Icons의 소문자_언더바 명칭을 사용하세요. (예: DOOROPEN (X) -> door_open (O))
+- 권장: school, groups, payments, security, analytics, door_open, campaign, description
 
 (수정/삭제 등도 기존 형식을 유지하되, 반드시 앞부분에 친절한 설명을 붙이세요.)`;
   }

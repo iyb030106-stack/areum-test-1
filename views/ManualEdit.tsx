@@ -40,7 +40,7 @@ const ManualEdit: React.FC = () => {
         setTitle(data.title);
         setDescription(data.description);
         setSubCategory(data.subCategory);
-        setIcon(data.icon || 'description');
+        setIcon((data.icon || 'description').toLowerCase().replace(/\s+/g, '_'));
         setTimeEstimate(data.timeEstimate);
         setLevel(data.level);
         setSteps(data.steps.length > 0 ? data.steps : ['']);
@@ -185,7 +185,13 @@ const ManualEdit: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 ml-1">아이콘 선택 (현재 선택됨: <span className="material-symbols-outlined align-middle text-[14px] text-primary">{icon}</span>)</label>
+              <label className="text-[11px] font-bold text-slate-500 ml-1 flex items-center gap-1">
+                아이콘 선택 (현재 선택됨:
+                <span className="material-symbols-outlined align-middle text-[20px] text-primary">
+                  {icon.toLowerCase().replace(/\s+/g, '_')}
+                </span>
+                )
+              </label>
               <div className="p-4 rounded-2xl bg-white/55 backdrop-blur-md border border-white/40 h-48 overflow-y-auto custom-scrollbar">
                 <div className="grid grid-cols-6 gap-3">
                   {AVAILABLE_ICONS.map((iconName) => (
