@@ -79,7 +79,9 @@ const ManualCategory: React.FC<ManualCategoryProps> = ({ role }) => {
                     className="flex items-center gap-4 bg-white/55 backdrop-blur-md dark:bg-slate-800/55 p-5 rounded-2xl shadow-sm border border-white/40 dark:border-slate-700 active:scale-95 cursor-pointer hover:border-primary/30 transition-all"
                   >
                     <div className="size-11 rounded-xl bg-white/70 dark:bg-slate-900 text-primary/80 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-2xl">{item.icon || 'description'}</span>
+                      <span className="material-symbols-outlined text-2xl">
+                        {(item.icon || 'description').toLowerCase().replace(/\s+/g, '_')}
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-black text-slate-800 dark:text-white truncate">{item.title}</p>

@@ -100,7 +100,7 @@ const QuickHelp: React.FC = () => {
                 className="flex items-center gap-4 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 active:scale-98 cursor-pointer hover:border-primary/30 transition-all"
               >
                 <div className="size-12 rounded-2xl bg-primary/5 text-primary flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-2xl">{item.icon}</span>
+                  <span className="material-symbols-outlined text-2xl">{(item.icon || 'description').toLowerCase().replace(/\s+/g, '_')}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-black text-slate-900 dark:text-white truncate">{item.title}</p>

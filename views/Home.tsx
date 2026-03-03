@@ -198,7 +198,7 @@ const Home: React.FC<HomeProps> = ({ role }) => {
                 filteredItems.map(item => (
                   <div key={item.id} onClick={() => navigate(`/manuals/${item.categoryId}/${item.id}`)} className="flex items-center gap-4 p-4 rounded-2xl bg-white/55 dark:bg-slate-800/55 transition-all cursor-pointer border border-transparent">
                     <div className="size-11 rounded-xl bg-white/70 dark:bg-slate-700 shadow-sm flex items-center justify-center text-primary/80 shrink-0">
-                      <span className="material-symbols-outlined text-2xl">{item.icon}</span>
+                      <span className="material-symbols-outlined text-2xl">{(item.icon || 'description').toLowerCase().replace(/\s+/g, '_')}</span>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -330,7 +330,9 @@ const Home: React.FC<HomeProps> = ({ role }) => {
                             {cat.icon === 'Aa' ? (
                               <span className="text-slate-400 text-[9px] font-black">Aa</span>
                             ) : (
-                              <span className="material-symbols-outlined text-slate-400 text-[18px]">{cat.icon}</span>
+                              <span className="material-symbols-outlined text-slate-400 text-[18px] select-none lowercase" style={{ fontVariant: 'normal', textTransform: 'none' }}>
+                                {(cat.icon || 'folder').toLowerCase().replace(/\s+/g, '_')}
+                              </span>
                             )}
                           </div>
                         </div>

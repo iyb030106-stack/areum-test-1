@@ -142,7 +142,7 @@ const SubjectManuals: React.FC<SubjectManualsProps> = ({ role }) => {
                 filteredItems.map(item => (
                   <div key={item.id} onClick={() => navigate(`/manuals/${item.categoryId}/${item.id}`)} className="flex items-center gap-4 p-4 rounded-2xl bg-white/55 dark:bg-slate-800/55 hover:bg-white/70 hover:shadow-lg transition-all cursor-pointer border border-transparent hover:border-white/60">
                     <div className="size-11 rounded-xl bg-white/70 dark:bg-slate-700 shadow-sm flex items-center justify-center text-primary shrink-0">
-                      <span className="material-symbols-outlined text-2xl">{item.icon}</span>
+                      <span className="material-symbols-outlined text-2xl">{(item.icon || 'description').toLowerCase().replace(/\s+/g, '_')}</span>
                     </div>
                     <div className="flex-1">
                       <p className="text-[13px] font-black text-slate-900 dark:text-white">{item.title}</p>

@@ -490,14 +490,62 @@ const AIGuide: React.FC<AIGuideProps> = ({ role, currentUser }) => {
                       </button>
 
                       {jsonContent && (() => {
-                        let parsedType = 'UNKNOWN';
-                        try { parsedType = JSON.parse(jsonContent).requestType || 'UNKNOWN'; } catch { }
-                        const isCreate = parsedType === 'STRUCTURE_MANUAL';
-                        const isUpdate = parsedType === 'UPDATE_MANUAL';
-                        const isDelete = parsedType === 'DELETE_MANUAL';
-                        const isDeleteCat = parsedType === 'DELETE_CATEGORY';
-                        const isAnnouncement = parsedType === 'CREATE_ANNOUNCEMENT';
-                        const isFAQ = parsedType === 'CREATE_FAQ';
+                        // 1. 파싱 시도
+                        let parsed: any = null;
+                        try { parsed = JSON.parse(jsonContent); } catch { return null; }
+                        if (!parsed || !parsed.requestType) return null;
+
+                        const type = parsed.requestType;
+                        const PLACEHOLDER = /제목|내용|설명|카테고리|질문|답변|예:|예시|placeholder|title|description/i;
+
+                        // 2. 실제 내용이 있는지 유효성 검증
+                        if (type === 'CREATE_ANNOUNCEMENT') {
+                          const anns = parsed.announcements;
+                          if (!Array.isArray(anns) || anns.length === 0) return null;
+                          const valid = anns.some((a: any) =>
+                            a.title && a.description &&
+                            !PLACEHOLDER.test(a.title) &&
+                            !PLACEHOLDER.test(a.description) &&
+                            a.title.length > 2 && a.description.length > 5
+                          );
+                          if (!valid) return null;
+                        }
+                        if (type === 'CREATE_FAQ') {
+                          const faqs = parsed.faqs;
+                          if (!Array.isArray(faqs) || faqs.length === 0) return null;
+                          const valid = faqs.some((f: any) =>
+                            f.question && f.answer &&
+                            !PLACEHOLDER.test(f.question) && !PLACEHOLDER.test(f.answer)
+                          );
+                          if (!valid) return null;
+                        }
+                        if (type === 'STRUCTURE_MANUAL') {
+                          const groups = parsed.groups;
+                          if (!Array.isArray(groups) || groups.length === 0) return null;
+                          const valid = groups.some((g: any) =>
+                            g.category?.name && !PLACEHOLDER.test(g.category.name) &&
+                            Array.isArray(g.items) && g.items.length > 0 &&
+                            g.items.some((i: any) => i.title && !PLACEHOLDER.test(i.title))
+                          );
+                          if (!valid) return null;
+                        }
+                        if (type === 'UPDATE_MANUAL') {
+                          if (!Array.isArray(parsed.items) || parsed.items.length === 0) return null;
+                        }
+                        if (type === 'DELETE_MANUAL') {
+                          if (!Array.isArray(parsed.items) || parsed.items.length === 0) return null;
+                        }
+                        if (type === 'DELETE_CATEGORY') {
+                          if (!Array.isArray(parsed.categories) || parsed.categories.length === 0) return null;
+                        }
+
+                        // 3. UI 렌더링
+                        const isCreate = type === 'STRUCTURE_MANUAL';
+                        const isUpdate = type === 'UPDATE_MANUAL';
+                        const isDelete = type === 'DELETE_MANUAL';
+                        const isDeleteCat = type === 'DELETE_CATEGORY';
+                        const isAnnouncement = type === 'CREATE_ANNOUNCEMENT';
+                        const isFAQ = type === 'CREATE_FAQ';
                         const labelText = isAnnouncement ? '공지사항 등록 준비됨' : isFAQ ? 'Q&A 등록 준비됨' : isCreate ? '매뉴얼 생성 준비됨' : isUpdate ? '매뉴얼 수정 준비됨' : isDelete ? '매뉴얼 삭제 준비됨' : isDeleteCat ? '카테고리 전체 삭제 준비됨' : '작업 준비됨';
                         const btnColor = (isDelete || isDeleteCat) ? 'bg-red-500 hover:bg-red-600' : isUpdate ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600';
                         const iconColor = (isDelete || isDeleteCat) ? 'text-red-400' : isUpdate ? 'text-amber-400' : 'text-emerald-400';
@@ -512,17 +560,14 @@ const AIGuide: React.FC<AIGuideProps> = ({ role, currentUser }) => {
                               <span className={`text-[9px] font-black ${iconColor} uppercase tracking-widest`}>{labelText}</span>
                             </div>
 
-                            {/* 공지사항: 중요 토글 */}
                             {isAnnouncement && (
                               <div className="flex items-center justify-between py-1 border-t border-slate-700">
                                 <span className="text-[10px] font-bold text-slate-400">중요 공지로 등록</span>
                                 <button
                                   onClick={() => setImportantOverrides(prev => ({ ...prev, [idx]: !(prev[idx] ?? false) }))}
-                                  className={`relative w-9 h-5 rounded-full transition-all shrink-0 ${(importantOverrides[idx] ?? false) ? 'bg-red-500' : 'bg-slate-700'
-                                    }`}
+                                  className={`relative w-9 h-5 rounded-full transition-all shrink-0 ${(importantOverrides[idx] ?? false) ? 'bg-red-500' : 'bg-slate-700'}`}
                                 >
-                                  <span className={`absolute top-0.5 size-4 rounded-full bg-white shadow transition-all ${(importantOverrides[idx] ?? false) ? 'left-[18px]' : 'left-0.5'
-                                    }`} />
+                                  <span className={`absolute top-0.5 size-4 rounded-full bg-white shadow transition-all ${(importantOverrides[idx] ?? false) ? 'left-[18px]' : 'left-0.5'}`} />
                                 </button>
                               </div>
                             )}
